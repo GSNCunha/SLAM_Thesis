@@ -1,0 +1,4 @@
+source;share/fastslam_thesis/local_setup.bash
+source;share/fastslam_thesis/local_setup.dsv
+source;share/fastslam_thesis/local_setup.sh
+source;share/fastslam_thesis/local_setup.zsh

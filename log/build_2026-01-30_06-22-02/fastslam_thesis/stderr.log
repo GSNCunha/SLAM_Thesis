@@ -1,0 +1,8 @@
+/usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `FastSlamNode::scanCallback(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void> > >)':
+fastslam_node.cpp:(.text._ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE[_ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE]+0x65a): undefined reference to `GridMapper::updateMap(nav_msgs::msg::OccupancyGrid_<std::allocator<void> >&, std::vector<float, std::allocator<float> > const&, double, double, double)'
+/usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `std::_MakeUniq<GridMapper>::__single_object std::make_unique<GridMapper>()':
+fastslam_node.cpp:(.text._ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_[_ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_]+0x26): undefined reference to `GridMapper::GridMapper()'
+collect2: error: ld returned 1 exit status
+gmake[2]: *** [CMakeFiles/fastslam_node.dir/build.make:262: fastslam_node] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/fastslam_node.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2
