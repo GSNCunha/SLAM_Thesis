@@ -1,0 +1,13 @@
+[0.032s] Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+[0.150s] [35m[1mConsolidate compiler generated dependencies of target fastslam_node[0m
+[0.202s] [ 20%] [32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o[0m
+[25.821s] [ 40%] [32m[1mLinking CXX executable fastslam_node[0m
+[27.865s] /usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `FastSlamNode::scanCallback(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void> > >)':
+[27.866s] fastslam_node.cpp:(.text._ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE[_ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE]+0x65a): undefined reference to `GridMapper::updateMap(nav_msgs::msg::OccupancyGrid_<std::allocator<void> >&, std::vector<float, std::allocator<float> > const&, double, double, double)'
+[27.872s] /usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `std::_MakeUniq<GridMapper>::__single_object std::make_unique<GridMapper>()':
+[27.873s] fastslam_node.cpp:(.text._ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_[_ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_]+0x26): undefined reference to `GridMapper::GridMapper()'
+[28.053s] collect2: error: ld returned 1 exit status
+[28.058s] gmake[2]: *** [CMakeFiles/fastslam_node.dir/build.make:262: fastslam_node] Error 1
+[28.060s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/fastslam_node.dir/all] Error 2
+[28.061s] gmake: *** [Makefile:146: all] Error 2
+[28.069s] Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8

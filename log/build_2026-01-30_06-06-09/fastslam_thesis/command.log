@@ -1,0 +1,4 @@
+Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/gabriel/Desktop/SLAM_Thesis -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis
+Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/gabriel/Desktop/SLAM_Thesis -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis
+Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8

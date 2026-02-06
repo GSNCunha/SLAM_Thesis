@@ -1,0 +1,8 @@
+[01m[K/home/gabriel/Desktop/SLAM_Thesis/src/fastslam_node.cpp:18:10:[m[K [01;31m[Kfatal error: [m[Kparticle.hpp: No such file or directory
+   18 | #include [01;31m[K"particle.hpp"[m[K
+      |          [01;31m[K^~~~~~~~~~~~~~[m[K
+compilation terminated.
+gmake[2]: *** [CMakeFiles/fastslam_node.dir/build.make:76: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/fastslam_node.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

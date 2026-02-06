@@ -1,0 +1,2 @@
+Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '2': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8

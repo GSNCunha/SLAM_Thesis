@@ -1,0 +1,12 @@
+[01m[K/home/gabriel/Desktop/SLAM_Thesis/src/fastslam_node.cpp:[m[K In member function ‘[01m[Kvoid FastSlamNode::publishResults()[m[K’:
+[01m[K/home/gabriel/Desktop/SLAM_Thesis/src/fastslam_node.cpp:299:16:[m[K [01;35m[Kwarning: [m[Kunused variable ‘[01m[Ktx[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-variable-Wunused-variable]8;;[m[K]
+  299 |         double [01;35m[Ktx[m[K = best_p.x - (current_odom_pose_.x_ * cos(best_p.theta - current_odom_pose_.theta_) - current_odom_pose_.y_ * sin(best_p.theta - current_odom_pose_.theta_));
+      |                [01;35m[K^~[m[K
+/usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `FastSlamNode::scanCallback(std::shared_ptr<sensor_msgs::msg::LaserScan_<std::allocator<void> > >)':
+fastslam_node.cpp:(.text._ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE[_ZN12FastSlamNode12scanCallbackESt10shared_ptrIN11sensor_msgs3msg10LaserScan_ISaIvEEEE]+0x65a): undefined reference to `GridMapper::updateMap(nav_msgs::msg::OccupancyGrid_<std::allocator<void> >&, std::vector<float, std::allocator<float> > const&, double, double, double)'
+/usr/bin/ld: CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o: in function `std::_MakeUniq<GridMapper>::__single_object std::make_unique<GridMapper>()':
+fastslam_node.cpp:(.text._ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_[_ZSt11make_uniqueI10GridMapperJEENSt9_MakeUniqIT_E15__single_objectEDpOT0_]+0x26): undefined reference to `GridMapper::GridMapper()'
+collect2: error: ld returned 1 exit status
+gmake[2]: *** [CMakeFiles/fastslam_node.dir/build.make:262: fastslam_node] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/fastslam_node.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2

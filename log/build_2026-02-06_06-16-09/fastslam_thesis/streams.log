@@ -1,0 +1,26 @@
+[0.021s] Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+[0.125s] [ 20%] [32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o[0m
+[20.819s] [ 40%] [32m[1mLinking CXX executable fastslam_node[0m
+[22.380s] [100%] Built target fastslam_node
+[22.401s] Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+[22.420s] Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
+[22.432s] -- Install configuration: ""
+[22.433s] -- Execute custom install script
+[22.433s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/fastslam_thesis/fastslam_node
+[22.434s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/launch/fastslam.launch.py
+[22.434s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/package_run_dependencies/fastslam_thesis
+[22.434s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/parent_prefix_path/fastslam_thesis
+[22.435s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/ament_prefix_path.sh
+[22.435s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/ament_prefix_path.dsv
+[22.435s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/path.sh
+[22.436s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/path.dsv
+[22.436s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.bash
+[22.436s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.sh
+[22.436s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.zsh
+[22.437s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.dsv
+[22.437s] -- Symlinking: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.dsv
+[22.455s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/packages/fastslam_thesis
+[22.455s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/cmake/fastslam_thesisConfig.cmake
+[22.455s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/cmake/fastslam_thesisConfig-version.cmake
+[22.456s] -- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.xml
+[22.460s] Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis

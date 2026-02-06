@@ -1,0 +1,104 @@
+[0.185s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--symlink-install']
+[0.185s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=True, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=8, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x759b7b452b60>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x759b7b4090c0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x759b7b4090c0>>, mixin_verb=('build',))
+[0.500s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.500s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.500s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.500s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.500s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.501s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.501s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/gabriel/Desktop/SLAM_Thesis'
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.501s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.521s] DEBUG:colcon.colcon_core.package_identification:Package '.' with type 'ros.ament_cmake' and name 'fastslam_thesis'
+[0.521s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.521s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.521s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.521s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.521s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.566s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.568s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 1 installed packages in /home/gabriel/Desktop/SLAM_Thesis/install
+[0.571s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 439 installed packages in /opt/ros/humble
+[0.574s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_args' from command line to 'None'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_target' from command line to 'None'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_clean_cache' from command line to 'False'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_clean_first' from command line to 'False'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'cmake_force_configure' from command line to 'False'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'ament_cmake_args' from command line to 'None'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'catkin_cmake_args' from command line to 'None'
+[0.649s] Level 5:colcon.colcon_core.verb:set package 'fastslam_thesis' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.649s] DEBUG:colcon.colcon_core.verb:Building package 'fastslam_thesis' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis', 'merge_install': False, 'path': '/home/gabriel/Desktop/SLAM_Thesis', 'symlink_install': True, 'test_result_base': None}
+[0.650s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.651s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.651s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/gabriel/Desktop/SLAM_Thesis' with build type 'ament_cmake'
+[0.652s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/gabriel/Desktop/SLAM_Thesis'
+[0.655s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.655s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.655s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.673s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+[19.732s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis -- -j8 -l8
+[19.750s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
+[19.789s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fastslam_thesis)
+[19.790s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
+[19.794s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis' for CMake module files
+[19.795s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis' for CMake config files
+[19.795s] Level 1:colcon.colcon_core.shell:create_environment_hook('fastslam_thesis', 'cmake_prefix_path')
+[19.796s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.ps1'
+[19.797s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.dsv'
+[19.798s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.sh'
+[19.799s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib'
+[19.799s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/bin'
+[19.799s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/pkgconfig/fastslam_thesis.pc'
+[19.800s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/python3.10/site-packages'
+[19.800s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/bin'
+[19.801s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.ps1'
+[19.802s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.dsv'
+[19.803s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.sh'
+[19.804s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.bash'
+[19.805s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.zsh'
+[19.807s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/colcon-core/packages/fastslam_thesis)
+[19.808s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(fastslam_thesis)
+[19.808s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis' for CMake module files
+[19.809s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis' for CMake config files
+[19.809s] Level 1:colcon.colcon_core.shell:create_environment_hook('fastslam_thesis', 'cmake_prefix_path')
+[19.809s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.ps1'
+[19.810s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.dsv'
+[19.811s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/hook/cmake_prefix_path.sh'
+[19.812s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib'
+[19.812s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/bin'
+[19.812s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/pkgconfig/fastslam_thesis.pc'
+[19.813s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/python3.10/site-packages'
+[19.813s] Level 1:colcon.colcon_core.environment:checking '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/bin'
+[19.814s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.ps1'
+[19.815s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.dsv'
+[19.816s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.sh'
+[19.817s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.bash'
+[19.818s] INFO:colcon.colcon_core.shell:Creating package script '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.zsh'
+[19.819s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/colcon-core/packages/fastslam_thesis)
+[19.819s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[19.820s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[19.820s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[19.820s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[19.836s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[19.837s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[19.837s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[19.857s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[19.857s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/gabriel/Desktop/SLAM_Thesis/install/local_setup.ps1'
+[19.860s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/gabriel/Desktop/SLAM_Thesis/install/_local_setup_util_ps1.py'
+[19.863s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/gabriel/Desktop/SLAM_Thesis/install/setup.ps1'
+[19.867s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/gabriel/Desktop/SLAM_Thesis/install/local_setup.sh'
+[19.868s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/gabriel/Desktop/SLAM_Thesis/install/_local_setup_util_sh.py'
+[19.870s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/gabriel/Desktop/SLAM_Thesis/install/setup.sh'
+[19.872s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/gabriel/Desktop/SLAM_Thesis/install/local_setup.bash'
+[19.873s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/gabriel/Desktop/SLAM_Thesis/install/setup.bash'
+[19.875s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/gabriel/Desktop/SLAM_Thesis/install/local_setup.zsh'
+[19.876s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/gabriel/Desktop/SLAM_Thesis/install/setup.zsh'
