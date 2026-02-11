@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <cstdint> // Necessário para int8_t
 
 /**
  * @class GridMapper
@@ -20,10 +21,13 @@ public:
     /**
      * @brief Updates the occupancy grid based on a laser scan.
      * Modernized version of GMapping's 'ScanMatcher::registerScan'.
+     * @param angle_min The start angle of the scan (e.g., -3.14)
+     * @param angle_increment The angle step between beams
      */
-    void updateMap(nav_msgs::msg::OccupancyGrid& map, 
-                   const std::vector<float>& ranges,
-                   double pose_x, double pose_y, double pose_theta);
+void updateMap(nav_msgs::msg::OccupancyGrid& map, 
+               const std::vector<float>& ranges, 
+               double x, double y, double theta,
+               double angle_min, double angle_increment); 
 
 private:
     // Log-Odds Parameters (Probabilistic Update)

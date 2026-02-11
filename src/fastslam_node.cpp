@@ -13,9 +13,9 @@
 #include <algorithm>
 #include <random>
 #include <mutex>
-#include <limits> // Necessário para std::numeric_limits
+#include <limits> 
 
-// INCLUDES LOCAIS (Aspas duplas = mesma pasta src/)
+// INCLUDES LOCAIS
 #include "particle.hpp"
 #include "motion_model.hpp"
 #include "measurement_model.hpp"
@@ -23,10 +23,6 @@
 
 using std::placeholders::_1;
 
-/**
- * @class FastSlamNode
- * @brief Nó principal que orquestra o algoritmo FastSLAM 1.0.
- */
 class FastSlamNode : public rclcpp::Node {
 public:
     FastSlamNode() : Node("fastslam_node") {
@@ -43,16 +39,8 @@ public:
         update_dist_angular_ = this->get_parameter("angular_update").as_double();
         
         // --- 2. Inicialização dos Componentes ---
-        
-        // Motion Model: [rot1, rot2, trans1, trans2]
-        // Mantive os valores ALTOS que definimos antes para ajudar na curva
-        motion_model_ = std::make_unique<MotionModel>(0.8, 0.05, 0.2, 0.05); 
-
-        // Measurement Model
-        // Aumentei o Sigma Hit (terceiro param) para 0.5 para ser mais tolerante
+        motion_model_ = std::make_unique<MotionModel>(0.05, 0.005, 0.05, 0.005); 
         measurement_model_ = std::make_unique<MeasurementModel>(0.95, 0.05, 0.5, 3.5);
-
-        // Grid Mapper
         grid_mapper_ = std::make_unique<GridMapper>();
 
         // --- 3. Inicialização das Partículas ---
@@ -129,6 +117,7 @@ private:
         double cosy_cosp = 1 - 2 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);
         double yaw = std::atan2(siny_cosp, cosy_cosp);
 
+        // Odometria STANDARD (Sem inversões manuais aqui, o robô anda certo)
         current_odom_pose_.x_ = msg->pose.pose.position.x;
         current_odom_pose_.y_ = msg->pose.pose.position.y;
         current_odom_pose_.theta_ = yaw;
@@ -141,7 +130,6 @@ private:
         }
     }
 
-    // --- FUNÇÃO MODIFICADA COM O FILTRO DE RANGE MAX ---
     void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
         if (!has_odom_) return; 
 
@@ -161,32 +149,29 @@ private:
 
         RCLCPP_DEBUG(this->get_logger(), "Executando FastSLAM Step...");
 
-        // === ETAPA DE FILTRAGEM DO LASER (Correção do "Ghost Wall") ===
-        // Criamos uma cópia mutável dos dados do laser
+        // === PREPARAÇÃO DOS DADOS ===
         std::vector<float> filtered_ranges = msg->ranges;
         float range_max = msg->range_max;
 
+        // --- CORREÇÃO DE ESPELHAMENTO REMOVIDA ---
+        // Voltamos ao padrão do ROS (Turtlebot scanneia em sentido anti-horário)
+        double current_angle_min = msg->angle_min;
+        double current_increment = msg->angle_increment;
+
+        // Filtro de Limpeza
         for (auto& r : filtered_ranges) {
-            // Se for Infinito ou NaN, marca como inválido
             if (std::isinf(r) || std::isnan(r)) {
                 r = std::numeric_limits<float>::quiet_NaN();
                 continue;
             }
-
-            // O FILTRO QUE VOCÊ PEDIU:
-            // Se a leitura estiver muito próxima do máximo (ex: >98% do alcance),
-            // ignoramos ela para não desenhar parede falsa.
+            // Se for muito longe, CLAMP para max (não NaN) para limpar o mapa
             if (r >= (range_max * 0.98)) {
-                // Definimos como NaN para que o Mapper e o SensorModel ignorem
-                r = std::numeric_limits<float>::quiet_NaN();
+                r = range_max; 
             }
-            
-            // Filtro de colisão própria (pernas do robô)
             if (r < 0.15) {
                 r = std::numeric_limits<float>::quiet_NaN();
             }
         }
-        // ===============================================================
 
         double total_weight = 0.0;
 
@@ -200,8 +185,18 @@ private:
             p.y = new_pose.y_;
             p.theta = new_pose.theta_;
 
-            // B. Correção (USANDO FILTERED_RANGES)
-            double w = measurement_model_->computeWeight(filtered_ranges, p.x, p.y, p.theta, p.map);
+            // B. Correção
+            // Passamos os ângulos PADRÃO (sem inversão)
+            double w = measurement_model_->computeWeight(
+                filtered_ranges, 
+                p.x, 
+                p.y, 
+                p.theta, 
+                p.map, 
+                current_angle_min,  // <--- CORRIGIDO
+                current_increment   // <--- CORRIGIDO
+            );
+            
             p.weight = w;
             total_weight += w;
         }
@@ -210,10 +205,18 @@ private:
         normalizeWeights(total_weight);
         resampleParticles();
 
-        // D. Atualização do Mapa (USANDO FILTERED_RANGES)
+        // D. Atualização do Mapa
         for (auto& p : particles_) {
-            // O GridMapper deve ignorar NaNs internamente
-            grid_mapper_->updateMap(p.map, filtered_ranges, p.x, p.y, p.theta);
+            // Passamos os ângulos PADRÃO (sem inversão)
+            grid_mapper_->updateMap(
+                p.map, 
+                filtered_ranges, 
+                p.x, 
+                p.y, 
+                p.theta, 
+                current_angle_min,  // <--- CORRIGIDO
+                current_increment   // <--- CORRIGIDO
+            );
         }
 
         last_update_odom_ = current_odom_pose_;

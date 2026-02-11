@@ -1,0 +1,198 @@
+[0.000000] (-) TimerEvent: {}
+[0.000419] (fastslam_thesis) JobQueued: {'identifier': 'fastslam_thesis', 'dependencies': OrderedDict()}
+[0.001838] (fastslam_thesis) JobStarted: {'identifier': 'fastslam_thesis'}
+[0.015651] (fastslam_thesis) JobProgress: {'identifier': 'fastslam_thesis', 'progress': 'cmake'}
+[0.016881] (fastslam_thesis) JobProgress: {'identifier': 'fastslam_thesis', 'progress': 'build'}
+[0.018289] (fastslam_thesis) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis', '--', '-j8', '-l8'], 'cwd': '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('PYTHON_BASIC_REPL', '1'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'gabriel'), ('LC_TIME', 'pt_BR.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('GIT_ASKPASS', '/usr/share/code/resources/app/extensions/git/dist/askpass.sh'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/gabriel'), ('CHROME_DESKTOP', 'code.desktop'), ('TERM_PROGRAM_VERSION', '1.108.1'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/code.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('VSCODE_GIT_ASKPASS_MAIN', '/usr/share/code/resources/app/extensions/git/dist/askpass-main.js'), ('LC_MONETARY', 'pt_BR.UTF-8'), ('VSCODE_GIT_ASKPASS_NODE', '/usr/share/code/code'), ('MANAGERPID', '967'), ('LC_CTYPE', 'pt_BR.UTF-8'), ('PYDEVD_DISABLE_FILE_VALIDATION', '1'), ('SYSTEMD_EXEC_PID', '1154'), ('BUNDLED_DEBUGPY_PATH', '/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/bundled/libs/debugpy'), ('IM_CONFIG_CHECK_ENV', '1'), ('VSCODE_PYTHON_AUTOACTIVATE_GUARD', '1'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '1834'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'gabriel'), ('JOURNAL_STREAM', '8:5701'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'gabriel'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('FC_FONTATIONS', '1'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/gabriel/.config/Code/User/globalStorage/github.copilot-chat/debugCommand:/home/gabriel/.config/Code/User/globalStorage/github.copilot-chat/copilotCli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/bundled/scripts/noConfigScripts'), ('SESSION_MANAGER', 'local/Sadigursky:@/tmp/.ICE-unix/1117,unix/Sadigursky:/tmp/.ICE-unix/1117'), ('INVOCATION_ID', 'cafdd6ae4af443dba1f6b55abd5e2a04'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'pt_BR.UTF-8'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('GDK_BACKEND', 'wayland'), ('DISPLAY', ':0'), ('VSCODE_DEBUGPY_ADAPTER_ENDPOINTS', '/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/.noConfigDebugAdapterEndpoints/endpoint-38f7d51a9e210feb.txt'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('PYTHONSTARTUP', '/home/gabriel/.config/Code/User/workspaceStorage/9c0741fb1305e223ef1bf23a8bef7960/ms-python.python/pythonrc.py'), ('LC_TELEPHONE', 'pt_BR.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.2RUVJ3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-0f2ef1d4a6.sock'), ('TERM_PROGRAM', 'vscode'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'pt_BR.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'pt_BR.UTF-8'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'pt_BR.UTF-8'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis'), ('TURTLEBOT3_MODEL', 'burger'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'pt_BR.UTF-8'), ('LC_PAPER', 'pt_BR.UTF-8'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis:/opt/ros/humble')]), 'shell': False}
+[0.098206] (fastslam_thesis) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target fastslam_node\x1b[0m\n'}
+[0.099455] (-) TimerEvent: {}
+[0.131237] (fastslam_thesis) StdoutLine: {'line': b'[ 20%] \x1b[32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o\x1b[0m\n'}
+[0.135141] (fastslam_thesis) StdoutLine: {'line': b'[ 40%] \x1b[32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/measurement_model.cpp.o\x1b[0m\n'}
+[0.199603] (-) TimerEvent: {}
+[0.300069] (-) TimerEvent: {}
+[0.400508] (-) TimerEvent: {}
+[0.500934] (-) TimerEvent: {}
+[0.601334] (-) TimerEvent: {}
+[0.701700] (-) TimerEvent: {}
+[0.802154] (-) TimerEvent: {}
+[0.902618] (-) TimerEvent: {}
+[1.003156] (-) TimerEvent: {}
+[1.103586] (-) TimerEvent: {}
+[1.204018] (-) TimerEvent: {}
+[1.304491] (-) TimerEvent: {}
+[1.404982] (-) TimerEvent: {}
+[1.505337] (-) TimerEvent: {}
+[1.605774] (-) TimerEvent: {}
+[1.706188] (-) TimerEvent: {}
+[1.806621] (-) TimerEvent: {}
+[1.907078] (-) TimerEvent: {}
+[2.007551] (-) TimerEvent: {}
+[2.107993] (-) TimerEvent: {}
+[2.208393] (-) TimerEvent: {}
+[2.308792] (-) TimerEvent: {}
+[2.409183] (-) TimerEvent: {}
+[2.509523] (-) TimerEvent: {}
+[2.609956] (-) TimerEvent: {}
+[2.710357] (-) TimerEvent: {}
+[2.810774] (-) TimerEvent: {}
+[2.911173] (-) TimerEvent: {}
+[3.011583] (-) TimerEvent: {}
+[3.112003] (-) TimerEvent: {}
+[3.212404] (-) TimerEvent: {}
+[3.312821] (-) TimerEvent: {}
+[3.413221] (-) TimerEvent: {}
+[3.513619] (-) TimerEvent: {}
+[3.614072] (-) TimerEvent: {}
+[3.714476] (-) TimerEvent: {}
+[3.814844] (-) TimerEvent: {}
+[3.915256] (-) TimerEvent: {}
+[4.015660] (-) TimerEvent: {}
+[4.116080] (-) TimerEvent: {}
+[4.216482] (-) TimerEvent: {}
+[4.316882] (-) TimerEvent: {}
+[4.417225] (-) TimerEvent: {}
+[4.517585] (-) TimerEvent: {}
+[4.617993] (-) TimerEvent: {}
+[4.718395] (-) TimerEvent: {}
+[4.818799] (-) TimerEvent: {}
+[4.919151] (-) TimerEvent: {}
+[5.019530] (-) TimerEvent: {}
+[5.119942] (-) TimerEvent: {}
+[5.220351] (-) TimerEvent: {}
+[5.320764] (-) TimerEvent: {}
+[5.421162] (-) TimerEvent: {}
+[5.521556] (-) TimerEvent: {}
+[5.621973] (-) TimerEvent: {}
+[5.722375] (-) TimerEvent: {}
+[5.822793] (-) TimerEvent: {}
+[5.923128] (-) TimerEvent: {}
+[6.023570] (-) TimerEvent: {}
+[6.124004] (-) TimerEvent: {}
+[6.224419] (-) TimerEvent: {}
+[6.324824] (-) TimerEvent: {}
+[6.425228] (-) TimerEvent: {}
+[6.525568] (-) TimerEvent: {}
+[6.625927] (-) TimerEvent: {}
+[6.726325] (-) TimerEvent: {}
+[6.826736] (-) TimerEvent: {}
+[6.927141] (-) TimerEvent: {}
+[7.027549] (-) TimerEvent: {}
+[7.128011] (-) TimerEvent: {}
+[7.228424] (-) TimerEvent: {}
+[7.328843] (-) TimerEvent: {}
+[7.429254] (-) TimerEvent: {}
+[7.529669] (-) TimerEvent: {}
+[7.630095] (-) TimerEvent: {}
+[7.730506] (-) TimerEvent: {}
+[7.830945] (-) TimerEvent: {}
+[7.931361] (-) TimerEvent: {}
+[8.031801] (-) TimerEvent: {}
+[8.132197] (-) TimerEvent: {}
+[8.232545] (-) TimerEvent: {}
+[8.332960] (-) TimerEvent: {}
+[8.433380] (-) TimerEvent: {}
+[8.533792] (-) TimerEvent: {}
+[8.634139] (-) TimerEvent: {}
+[8.734521] (-) TimerEvent: {}
+[8.834925] (-) TimerEvent: {}
+[8.935263] (-) TimerEvent: {}
+[9.035659] (-) TimerEvent: {}
+[9.136063] (-) TimerEvent: {}
+[9.236460] (-) TimerEvent: {}
+[9.336846] (-) TimerEvent: {}
+[9.437230] (-) TimerEvent: {}
+[9.537618] (-) TimerEvent: {}
+[9.638033] (-) TimerEvent: {}
+[9.738433] (-) TimerEvent: {}
+[9.838845] (-) TimerEvent: {}
+[9.939315] (-) TimerEvent: {}
+[10.039733] (-) TimerEvent: {}
+[10.140158] (-) TimerEvent: {}
+[10.240556] (-) TimerEvent: {}
+[10.340981] (-) TimerEvent: {}
+[10.441378] (-) TimerEvent: {}
+[10.541758] (-) TimerEvent: {}
+[10.642191] (-) TimerEvent: {}
+[10.742606] (-) TimerEvent: {}
+[10.843040] (-) TimerEvent: {}
+[10.943467] (-) TimerEvent: {}
+[11.043957] (-) TimerEvent: {}
+[11.144347] (-) TimerEvent: {}
+[11.244761] (-) TimerEvent: {}
+[11.345148] (-) TimerEvent: {}
+[11.445494] (-) TimerEvent: {}
+[11.545972] (-) TimerEvent: {}
+[11.646379] (-) TimerEvent: {}
+[11.746789] (-) TimerEvent: {}
+[11.847188] (-) TimerEvent: {}
+[11.947571] (-) TimerEvent: {}
+[12.047928] (-) TimerEvent: {}
+[12.148328] (-) TimerEvent: {}
+[12.248731] (-) TimerEvent: {}
+[12.349135] (-) TimerEvent: {}
+[12.449544] (-) TimerEvent: {}
+[12.549980] (-) TimerEvent: {}
+[12.650386] (-) TimerEvent: {}
+[12.750791] (-) TimerEvent: {}
+[12.851192] (-) TimerEvent: {}
+[12.951588] (-) TimerEvent: {}
+[13.052010] (-) TimerEvent: {}
+[13.152414] (-) TimerEvent: {}
+[13.252825] (-) TimerEvent: {}
+[13.353219] (-) TimerEvent: {}
+[13.453616] (-) TimerEvent: {}
+[13.554027] (-) TimerEvent: {}
+[13.654429] (-) TimerEvent: {}
+[13.754840] (-) TimerEvent: {}
+[13.855257] (-) TimerEvent: {}
+[13.955662] (-) TimerEvent: {}
+[14.056091] (-) TimerEvent: {}
+[14.156493] (-) TimerEvent: {}
+[14.256946] (-) TimerEvent: {}
+[14.357343] (-) TimerEvent: {}
+[14.457699] (-) TimerEvent: {}
+[14.558132] (-) TimerEvent: {}
+[14.658553] (-) TimerEvent: {}
+[14.758979] (-) TimerEvent: {}
+[14.859401] (-) TimerEvent: {}
+[14.959847] (-) TimerEvent: {}
+[15.060188] (-) TimerEvent: {}
+[15.075076] (fastslam_thesis) StdoutLine: {'line': b'[ 60%] \x1b[32m\x1b[1mLinking CXX executable fastslam_node\x1b[0m\n'}
+[15.160307] (-) TimerEvent: {}
+[15.260784] (-) TimerEvent: {}
+[15.361279] (-) TimerEvent: {}
+[15.461784] (-) TimerEvent: {}
+[15.562283] (-) TimerEvent: {}
+[15.662679] (-) TimerEvent: {}
+[15.763073] (-) TimerEvent: {}
+[15.863550] (-) TimerEvent: {}
+[15.964534] (-) TimerEvent: {}
+[16.064815] (-) TimerEvent: {}
+[16.165142] (-) TimerEvent: {}
+[16.193721] (fastslam_thesis) StdoutLine: {'line': b'[100%] Built target fastslam_node\n'}
+[16.212761] (fastslam_thesis) CommandEnded: {'returncode': 0}
+[16.213989] (fastslam_thesis) JobProgress: {'identifier': 'fastslam_thesis', 'progress': 'install'}
+[16.236920] (fastslam_thesis) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis'], 'cwd': '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis', 'env': OrderedDict([('GJS_DEBUG_TOPICS', 'JS ERROR;JS LOG'), ('PYTHON_BASIC_REPL', '1'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('USER', 'gabriel'), ('LC_TIME', 'pt_BR.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('GIT_ASKPASS', '/usr/share/code/resources/app/extensions/git/dist/askpass.sh'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/gabriel'), ('CHROME_DESKTOP', 'code.desktop'), ('TERM_PROGRAM_VERSION', '1.108.1'), ('DESKTOP_SESSION', 'ubuntu'), ('GIO_LAUNCHED_DESKTOP_FILE', '/usr/share/applications/code.desktop'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('VSCODE_GIT_ASKPASS_MAIN', '/usr/share/code/resources/app/extensions/git/dist/askpass-main.js'), ('LC_MONETARY', 'pt_BR.UTF-8'), ('VSCODE_GIT_ASKPASS_NODE', '/usr/share/code/code'), ('MANAGERPID', '967'), ('LC_CTYPE', 'pt_BR.UTF-8'), ('PYDEVD_DISABLE_FILE_VALIDATION', '1'), ('SYSTEMD_EXEC_PID', '1154'), ('BUNDLED_DEBUGPY_PATH', '/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/bundled/libs/debugpy'), ('IM_CONFIG_CHECK_ENV', '1'), ('VSCODE_PYTHON_AUTOACTIVATE_GUARD', '1'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('GIO_LAUNCHED_DESKTOP_FILE_PID', '1834'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'gabriel'), ('JOURNAL_STREAM', '8:5701'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'gabriel'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('FC_FONTATIONS', '1'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/home/gabriel/.config/Code/User/globalStorage/github.copilot-chat/debugCommand:/home/gabriel/.config/Code/User/globalStorage/github.copilot-chat/copilotCli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin:/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/bundled/scripts/noConfigScripts'), ('SESSION_MANAGER', 'local/Sadigursky:@/tmp/.ICE-unix/1117,unix/Sadigursky:/tmp/.ICE-unix/1117'), ('INVOCATION_ID', 'cafdd6ae4af443dba1f6b55abd5e2a04'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'pt_BR.UTF-8'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('GDK_BACKEND', 'wayland'), ('DISPLAY', ':0'), ('VSCODE_DEBUGPY_ADAPTER_ENDPOINTS', '/home/gabriel/.vscode/extensions/ms-python.debugpy-2025.18.0-linux-x64/.noConfigDebugAdapterEndpoints/endpoint-38f7d51a9e210feb.txt'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('PYTHONSTARTUP', '/home/gabriel/.config/Code/User/workspaceStorage/9c0741fb1305e223ef1bf23a8bef7960/ms-python.python/pythonrc.py'), ('LC_TELEPHONE', 'pt_BR.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.2RUVJ3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('VSCODE_GIT_IPC_HANDLE', '/run/user/1000/vscode-git-0f2ef1d4a6.sock'), ('TERM_PROGRAM', 'vscode'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'pt_BR.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'pt_BR.UTF-8'), ('GJS_DEBUG_OUTPUT', 'stderr'), ('LC_IDENTIFICATION', 'pt_BR.UTF-8'), ('VSCODE_GIT_ASKPASS_EXTRA_ARGS', ''), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis'), ('TURTLEBOT3_MODEL', 'burger'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'pt_BR.UTF-8'), ('LC_PAPER', 'pt_BR.UTF-8'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis:/opt/ros/humble')]), 'shell': False}
+[16.248432] (fastslam_thesis) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[16.248948] (fastslam_thesis) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[16.249405] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/lib/fastslam_thesis/fastslam_node\n'}
+[16.249771] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/launch/fastslam.launch.py\n'}
+[16.250140] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/package_run_dependencies/fastslam_thesis\n'}
+[16.250372] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/parent_prefix_path/fastslam_thesis\n'}
+[16.250598] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/ament_prefix_path.sh\n'}
+[16.250847] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/ament_prefix_path.dsv\n'}
+[16.251082] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/path.sh\n'}
+[16.251295] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/environment/path.dsv\n'}
+[16.251496] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.bash\n'}
+[16.251709] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.sh\n'}
+[16.251964] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.zsh\n'}
+[16.252250] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/local_setup.dsv\n'}
+[16.252471] (fastslam_thesis) StdoutLine: {'line': b'-- Symlinking: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.dsv\n'}
+[16.265271] (-) TimerEvent: {}
+[16.268251] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/ament_index/resource_index/packages/fastslam_thesis\n'}
+[16.268608] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/cmake/fastslam_thesisConfig.cmake\n'}
+[16.268877] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/cmake/fastslam_thesisConfig-version.cmake\n'}
+[16.269117] (fastslam_thesis) StdoutLine: {'line': b'-- Up-to-date symlink: /home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis/share/fastslam_thesis/package.xml\n'}
+[16.272753] (fastslam_thesis) CommandEnded: {'returncode': 0}
+[16.324126] (fastslam_thesis) JobEnded: {'identifier': 'fastslam_thesis', 'rc': 0}
+[16.325489] (-) EventReactorShutdown: {}

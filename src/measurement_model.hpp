@@ -44,7 +44,10 @@ public:
                          double pose_x, 
                          double pose_y, 
                          double pose_theta,
-                         const nav_msgs::msg::OccupancyGrid& map);
+                         const nav_msgs::msg::OccupancyGrid& map,
+                         double angle_min,      
+                         double angle_increment  
+                        );
 
 private:
     double z_hit_;
