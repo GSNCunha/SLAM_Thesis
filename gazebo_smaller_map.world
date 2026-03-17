@@ -1,0 +1,96 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="turtlebot3_hex_2m">
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+
+    <physics type="ode">
+      <real_time_update_rate>1000.0</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+    </physics>
+
+    <model name="hex_walls">
+      <static>true</static>
+      <link name="wall_1">
+        <pose>0.866 0.5 0.1 0 0 0.523599</pose>
+        <collision name="c1"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v1"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+      <link name="wall_2">
+        <pose>0 1.0 0.1 0 0 1.5708</pose>
+        <collision name="c2"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v2"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+      <link name="wall_3">
+        <pose>-0.866 0.5 0.1 0 0 2.61799</pose>
+        <collision name="c3"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v3"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+      <link name="wall_4">
+        <pose>-0.866 -0.5 0.1 0 0 -2.61799</pose>
+        <collision name="c4"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v4"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+      <link name="wall_5">
+        <pose>0 -1.0 0.1 0 0 -1.5708</pose>
+        <collision name="c5"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v5"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+      <link name="wall_6">
+        <pose>0.866 -0.5 0.1 0 0 -0.523599</pose>
+        <collision name="c6"><geometry><box><size>0.05 1.25 0.2</size></box></geometry></collision>
+        <visual name="v6"><geometry><box><size>0.05 1.25 0.2</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
+      </link>
+    </model>
+
+    <model name="obs_top_left"><static>true</static><pose>0.38 0.38 0.1 0 0 0</pose><link name="link"><visual name="v"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></visual><collision name="c"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></collision></link></model>
+    
+    <model name="obs_top_right"><static>true</static><pose>0.38 -0.38 0.1 0 0 0</pose><link name="link"><visual name="v"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></visual><collision name="c"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></collision></link></model>
+    
+    <model name="obs_bot_left"><static>true</static><pose>-0.38 0.38 0.1 0 0 0</pose><link name="link"><visual name="v"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></visual><collision name="c"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></collision></link></model>
+    
+    <model name="obs_bot_right"><static>true</static><pose>-0.38 -0.38 0.1 0 0 0</pose><link name="link"><visual name="v"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></visual><collision name="c"><geometry><cylinder><radius>0.08</radius><length>0.2</length></cylinder></geometry></collision></link></model>
+
+    <model name="corner_E">
+      <static>true</static>
+      <pose>1.155 0 0.1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material></visual>
+      </link>
+    </model>
+    <model name="corner_NE">
+      <static>true</static>
+      <pose>0.5775 1.0 0.1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material></visual>
+      </link>
+    </model>
+    <model name="corner_NW">
+      <static>true</static>
+      <pose>-0.5775 1.0 0.1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material></visual>
+      </link>
+    </model>
+    <model name="corner_SW">
+      <static>true</static>
+      <pose>-0.5775 -1.0 0.1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material></visual>
+      </link>
+    </model>
+    <model name="corner_SE">
+      <static>true</static>
+      <pose>0.5775 -1.0 0.1 0 0 0</pose>
+      <link name="link">
+        <collision name="c"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry></collision>
+        <visual name="v"><geometry><cylinder><radius>0.15</radius><length>0.2</length></cylinder></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Green</name></script></material></visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
