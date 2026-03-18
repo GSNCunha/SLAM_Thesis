@@ -4,30 +4,21 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import math
 
-class RoundedRectangleNode(Node):
+class SequenceNavNode(Node):
     def __init__(self):
-        super().__init__('rounded_rectangle_node')
+        super().__init__('sequence_nav_node')
         
-        # --- CONFIGURAÇÕES DE DIMENSÕES (Ajuste aqui) ---
-        self.len_long = 1.35           # Tamanho total da aresta MAIOR
-        self.len_short = 0          # Tamanho total da aresta MENOR
-        self.corner_radius = 0.35      # Raio da curva
-        self.linear_speed = 0.05      
-        
-        # Cálculos das distâncias retas padrão (Descontando os 2 raios de curva)
-        self.dist_straight_long = self.len_long - (2 * self.corner_radius)
-        self.dist_straight_short = self.len_short - (2 * self.corner_radius)
-        
-        # Velocidade angular (w = v/r)
-        self.turn_speed = self.linear_speed / self.corner_radius
+        # --- GENERAL SETTINGS ---
+        self.linear_speed = 0.05  # Base linear speed in m/s
+        self.turn_tolerance = 0.04 # Tolerance for 90-degree turn completion
         
         # --- ROS SETUP ---
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
         self.subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.timer = self.create_timer(0.05, self.control_loop)
 
-        # Variáveis de Estado
-        self.state = 'INIT' 
+        # --- STATE VARIABLES ---
+        self.state = 'FETCH_CMD' 
         self.current_x = 0.0
         self.current_y = 0.0
         self.current_theta = 0.0
@@ -37,84 +28,150 @@ class RoundedRectangleNode(Node):
         self.start_y = 0.0
         self.start_theta = 0.0
         
-        self.side_count = 0  # 0 e 2: Longo | 1 e 3: Curto
-        self.current_target_dist = 0.0
+        # --- SEQUENCE EXECUTION VARIABLES ---
+        self.command_sequence = []
+        self.current_cmd_idx = 0
+        self.current_target_val = 0.0  # Stores either distance (m) or radius (m)
 
+        # =====================================================================
+        # DEFINE YOUR SEQUENCE HERE
+        # Use the methods:
+        #   self.add_straight(distance_in_mm)
+        #   self.add_left(radius_in_meters)
+        #   self.add_right(radius_in_meters)
+        # =====================================================================
+        
+        self.add_straight(200)       
+        self.add_right(0.25)          
+        self.add_right(0.25) 
+        self.add_straight(20)      
+        self.add_left(0.25)  
+        self.add_straight(500) 
+        self.add_left(0.25) 
+        self.add_left(0.25) 
+        self.add_left(0.25) 
+         
+        
+        # =====================================================================
+
+    # --- COMMAND BUILDER FUNCTIONS ---
+    def add_straight(self, distance_mm):
+        # Converts mm to meters internally
+        distance_m = distance_mm / 1000.0
+        self.command_sequence.append({'type': 'STRAIGHT', 'value': distance_m})
+
+    def add_left(self, radius_m):
+        self.command_sequence.append({'type': 'TURN_LEFT', 'value': radius_m})
+
+    def add_right(self, radius_m):
+        self.command_sequence.append({'type': 'TURN_RIGHT', 'value': radius_m})
+
+    # --- SENSOR CALLBACK ---
     def odom_callback(self, msg):
         pos = msg.pose.pose.position
         ori = msg.pose.pose.orientation
         self.current_x = pos.x
         self.current_y = pos.y
         
+        # Convert quaternion to Euler angle (yaw/theta)
         siny_cosp = 2 * (ori.w * ori.z + ori.x * ori.y)
         cosy_cosp = 1 - 2 * (ori.y * ori.y + ori.z * ori.z)
         self.current_theta = math.atan2(siny_cosp, cosy_cosp)
+        
         self.received_odom = True
 
     def normalize_angle(self, angle):
+        """ Keeps the angle between -pi and pi """
         while angle > math.pi: angle -= 2.0 * math.pi
         while angle < -math.pi: angle += 2.0 * math.pi
         return angle
 
+    # --- MAIN CONTROL LOOP ---
     def control_loop(self):
-        if not self.received_odom: return
+        if not self.received_odom:
+            return
 
         msg = Twist()
 
-        if self.state == 'INIT':
-            # 1. Determina se é aresta maior ou menor
-            if (self.side_count % 2) == 0:
-                self.current_target_dist = self.dist_straight_long
-                tipo = "MAIOR"
-            else:
-                self.current_target_dist = self.dist_straight_short
-                tipo = "MENOR"
+        # 1. FETCH NEXT COMMAND
+        if self.state == 'FETCH_CMD':
+            if self.current_cmd_idx >= len(self.command_sequence):
+                self.get_logger().info("Sequence finished! Stopping robot.")
+                self.state = 'DONE'
+                msg.linear.x = 0.0
+                msg.angular.z = 0.0
+                self.publisher_.publish(msg)
+                return
 
-            # 2. COMPENSAÇÃO DA PRIMEIRA RETA (Se for o primeiro movimento da vida)
-            if self.side_count == 0:
-                self.current_target_dist += self.corner_radius
-                self.get_logger().info(f"--- LARGADA: Aresta {tipo} com compensação de raio ---")
+            # Get current command dictionary
+            cmd = self.command_sequence[self.current_cmd_idx]
+            self.state = cmd['type']
+            self.current_target_val = cmd['value']
             
+            # Save starting position/orientation for relative calculation
             self.start_x = self.current_x
             self.start_y = self.current_y
-            self.state = 'STRAIGHT'
-            self.get_logger().info(f"Lado {self.side_count}: {tipo}. Alvo: {self.current_target_dist:.2f}m")
+            self.start_theta = self.current_theta
+            
+            self.get_logger().info(f"Executing step {self.current_cmd_idx + 1}/{len(self.command_sequence)}: {self.state} with value {self.current_target_val}")
 
+        # 2. EXECUTE STRAIGHT COMMAND
         elif self.state == 'STRAIGHT':
             dx = self.current_x - self.start_x
             dy = self.current_y - self.start_y
-            distance = math.sqrt(dx*dx + dy*dy)
+            distance_driven = math.sqrt(dx*dx + dy*dy)
 
-            if distance < self.current_target_dist:
+            if distance_driven < self.current_target_val:
                 msg.linear.x = self.linear_speed
                 msg.angular.z = 0.0
             else:
-                self.start_theta = self.current_theta
-                self.state = 'CURVE'
-                self.get_logger().info("Curva...")
+                self.get_logger().info("Straight movement completed.")
+                self.current_cmd_idx += 1
+                self.state = 'FETCH_CMD'
 
-        elif self.state == 'CURVE':
+        # 3. EXECUTE LEFT OR RIGHT TURN (90 DEGREES)
+        elif self.state in ['TURN_LEFT', 'TURN_RIGHT']:
+            # Calculate how much we have turned since the start of the command
             delta_theta = self.normalize_angle(self.current_theta - self.start_theta)
             
-            # Curva de 90 graus
-            if abs(delta_theta) < (math.pi / 2.0) - 0.04:
+            # 90 degrees is pi/2 radians
+            target_angle = (math.pi / 2.0)
+            
+            if abs(delta_theta) < (target_angle - self.turn_tolerance):
                 msg.linear.x = self.linear_speed
-                msg.angular.z = self.turn_speed
+                
+                # Calculate angular speed (w = v / r)
+                turn_speed = self.linear_speed / self.current_target_val
+                
+                # Apply direction (Positive for Left, Negative for Right)
+                if self.state == 'TURN_LEFT':
+                    msg.angular.z = turn_speed
+                else:
+                    msg.angular.z = -turn_speed
             else:
-                # Incrementa o contador de lados (0 -> 1 -> 2 -> 3 -> 0...)
-                self.side_count = (self.side_count + 1) % 4
-                self.state = 'INIT'
+                self.get_logger().info(f"Turn {self.state} completed.")
+                self.current_cmd_idx += 1
+                self.state = 'FETCH_CMD'
+                
+        # 4. DONE STATE
+        elif self.state == 'DONE':
+            msg.linear.x = 0.0
+            msg.angular.z = 0.0
 
+        # Send speed to robot
         self.publisher_.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RoundedRectangleNode()
+    node = SequenceNavNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
+        node.get_logger().info("Keyboard Interrupt detected. Shutting down...")
     finally:
+        # Send zero velocity before shutting down
+        zero_msg = Twist()
+        node.publisher_.publish(zero_msg)
         node.destroy_node()
         rclpy.shutdown()
 

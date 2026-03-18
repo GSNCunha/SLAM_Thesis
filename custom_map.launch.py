@@ -33,9 +33,10 @@ def generate_launch_description():
     spawn_turtlebot_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(tb3_gazebo_dir, 'spawn_turtlebot3.launch.py')),
         launch_arguments={
-            'x_pose': '-0.7', 
-            'y_pose': '0.0', 
+            'x_pose': '-0.20', 
+            'y_pose': '0.72', 
             'z_pose': '0.05'
+            # Removemos a linha do yaw, ele nascerá virado para o +X perfeitamente
         }.items()
     )
 
