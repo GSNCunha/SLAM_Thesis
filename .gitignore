@@ -1,1 +1,7 @@
-.vscode/
+# --- ROS 2 Build Folders ---
+install/
+build/
+log/
+
+# --- Python ---
+__pycache__/

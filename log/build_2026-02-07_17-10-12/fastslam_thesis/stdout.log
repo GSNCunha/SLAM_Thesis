@@ -1,3 +1,0 @@
-[35m[1mConsolidate compiler generated dependencies of target fastslam_node[0m
-[ 40%] [32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/measurement_model.cpp.o[0m
-[ 40%] [32mBuilding CXX object CMakeFiles/fastslam_node.dir/src/fastslam_node.cpp.o[0m

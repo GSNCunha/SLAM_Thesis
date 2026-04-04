@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/gabriel/Desktop/SLAM_Thesis
+CMAKE_SOURCE_DIR = /root/SLAM_Thesis
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
+CMAKE_BINARY_DIR = /root/SLAM_Thesis/build/fastslam_thesis
 
 # Utility rule file for uninstall.
 
@@ -78,6 +78,6 @@ CMakeFiles/uninstall.dir/clean:
 .PHONY : CMakeFiles/uninstall.dir/clean
 
 CMakeFiles/uninstall.dir/depend:
-	cd /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/gabriel/Desktop/SLAM_Thesis /home/gabriel/Desktop/SLAM_Thesis /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
+	cd /root/SLAM_Thesis/build/fastslam_thesis && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /root/SLAM_Thesis /root/SLAM_Thesis /root/SLAM_Thesis/build/fastslam_thesis /root/SLAM_Thesis/build/fastslam_thesis /root/SLAM_Thesis/build/fastslam_thesis/CMakeFiles/uninstall.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/uninstall.dir/depend
 
