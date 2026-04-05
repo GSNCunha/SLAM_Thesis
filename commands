@@ -3,3 +3,5 @@ colcon build
 ros2 launch fastslam_thesis fastslam.launch.py
 
 ros2 launch custom_map.launch.py
+
+python3 base_controller.py

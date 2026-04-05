@@ -69,7 +69,12 @@ class BaseController(Node):
         p_l, comm_l, _ = self.ph.read4ByteTxRx(self.portL, DXL_ID_L, ADDR_PRESENT_POSITION)
         p_r, comm_r, _ = self.ph.read4ByteTxRx(self.portR, DXL_ID_R, ADDR_PRESENT_POSITION)
 
-        if comm_l != COMM_SUCCESS or comm_r != COMM_SUCCESS:
+        if comm_l != COMM_SUCCESS:
+            self.get_logger().error(f"❌ Falha no Motor Esq (ID {DXL_ID_L}): {self.ph.getTxRxResult(comm_l)}")
+            return
+            
+        if comm_r != COMM_SUCCESS:
+            self.get_logger().error(f"❌ Falha no Motor Dir (ID {DXL_ID_R}): {self.ph.getTxRxResult(comm_r)}")
             return
 
         now = self.get_clock().now()
