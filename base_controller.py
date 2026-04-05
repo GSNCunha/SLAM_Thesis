@@ -16,7 +16,7 @@ DXL_ID_L = 4
 DXL_ID_R = 3
 
 # Medidas reais do seu robô (ajuste se necessário)
-R = 0.0688  # Raio da roda (m)
+R = 0.0688/2  # Raio da roda (m)
 L = 0.176   # Distância entre rodas (m)
 TICKS_PER_REV = 4096 # Resolução do XH430
 
