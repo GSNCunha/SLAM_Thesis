@@ -61,7 +61,7 @@ class BaseController(Node):
         self.setup_motors()
 
         # Timer para calcular Odometria (20Hz - ideal para SLAM)
-        self.timer = self.create_timer(0.05, self.update_odometry)
+        self.timer = self.create_timer(0.2, self.update_odometry)
 
     def setup_motors(self):
         for port, dxl_id in [(self.portL, DXL_ID_L), (self.portR, DXL_ID_R)]:
@@ -70,6 +70,9 @@ class BaseController(Node):
             self.ph.write1ByteTxRx(port, dxl_id, ADDR_TORQUE_ENABLE, 1)
 
     def update_odometry(self):
+
+        self.portL.clearPort()
+        self.portR.clearPort()
         # 1. Ler encoders
         p_l, comm_l, _ = self.ph.read4ByteTxRx(self.portL, DXL_ID_L, ADDR_PRESENT_POSITION)
         p_r, comm_r, _ = self.ph.read4ByteTxRx(self.portR, DXL_ID_R, ADDR_PRESENT_POSITION)
@@ -117,6 +120,7 @@ class BaseController(Node):
             odom.pose.pose.position.y = self.y
             odom.pose.pose.orientation = t.transform.rotation
             self.odom_pub.publish(odom)
+            
 
         self.last_l_ticks = p_l
         self.last_r_ticks = p_r
