@@ -48,6 +48,11 @@ class BaseController(Node):
 
         if self.portL.openPort() and self.portL.setBaudRate(BAUDRATE) and \
            self.portR.openPort() and self.portR.setBaudRate(BAUDRATE):
+            
+            # --- CORREÇÃO: Devolvendo a paciência (Timeout) ao código ---
+            self.portL.setPacketTimeout(2.0)
+            self.portR.setPacketTimeout(2.0)
+            
             self.get_logger().info('✅ Conectado aos Motores e pronto para Odometria!')
         else:
             self.get_logger().error('❌ Erro nas portas USB!')
