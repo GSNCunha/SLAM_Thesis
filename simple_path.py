@@ -33,12 +33,12 @@ class SequenceNavNode(Node):
         self.current_cmd_idx = 0
         self.current_target_val = 0.0  # Stores either distance (m) or radius (m)
 
+        # --- DEBUG VARIABLES ---
+        self.print_counter = 0 # Usado para não floodar o terminal
+        self.get_logger().info("🚀 Nó de Navegação Iniciado! Aguardando o sensor de odometria...")
+
         # =====================================================================
         # DEFINE YOUR SEQUENCE HERE
-        # Use the methods:
-        #   self.add_straight(distance_in_mm)
-        #   self.add_left(radius_in_meters)
-        #   self.add_right(radius_in_meters)
         # =====================================================================
         
         self.add_straight(200)       
@@ -78,6 +78,10 @@ class SequenceNavNode(Node):
         cosy_cosp = 1 - 2 * (ori.y * ori.y + ori.z * ori.z)
         self.current_theta = math.atan2(siny_cosp, cosy_cosp)
         
+        # DEBUG: Avisa apenas na primeira vez que recebe os dados
+        if not self.received_odom:
+            self.get_logger().info("✅ ODOMETRIA RECEBIDA! O robô agora sabe onde está. Iniciando a sequência.")
+            
         self.received_odom = True
 
     def normalize_angle(self, angle):
@@ -88,15 +92,23 @@ class SequenceNavNode(Node):
 
     # --- MAIN CONTROL LOOP ---
     def control_loop(self):
+        # DEBUG: Verifica se a odometria está chegando
         if not self.received_odom:
+            if not hasattr(self, 'odom_wait_printed'):
+                self.get_logger().warning("⚠️ TRAVADO: Aguardando dados em '/odom'. Verifique se o base_controller.py está rodando!")
+                self.odom_wait_printed = True
             return
 
         msg = Twist()
+        
+        # Filtro de print (imprime a cada 10 ciclos = 0.5 segundos)
+        self.print_counter += 1
+        should_print = (self.print_counter % 10 == 0)
 
         # 1. FETCH NEXT COMMAND
         if self.state == 'FETCH_CMD':
             if self.current_cmd_idx >= len(self.command_sequence):
-                self.get_logger().info("Sequence finished! Stopping robot.")
+                self.get_logger().info("🏁 Sequência finalizada! Parando o robô.")
                 self.state = 'DONE'
                 msg.linear.x = 0.0
                 msg.angular.z = 0.0
@@ -113,7 +125,7 @@ class SequenceNavNode(Node):
             self.start_y = self.current_y
             self.start_theta = self.current_theta
             
-            self.get_logger().info(f"Executing step {self.current_cmd_idx + 1}/{len(self.command_sequence)}: {self.state} with value {self.current_target_val}")
+            self.get_logger().info(f"▶️ Iniciando passo {self.current_cmd_idx + 1}/{len(self.command_sequence)}: {self.state} com valor {self.current_target_val}")
 
         # 2. EXECUTE STRAIGHT COMMAND
         elif self.state == 'STRAIGHT':
@@ -121,11 +133,14 @@ class SequenceNavNode(Node):
             dy = self.current_y - self.start_y
             distance_driven = math.sqrt(dx*dx + dy*dy)
 
+            if should_print:
+                self.get_logger().info(f"   Andando Reto: {distance_driven:.3f}m / {self.current_target_val:.3f}m")
+
             if distance_driven < self.current_target_val:
                 msg.linear.x = self.linear_speed
                 msg.angular.z = 0.0
             else:
-                self.get_logger().info("Straight movement completed.")
+                self.get_logger().info("✅ Movimento Reto concluído.")
                 self.current_cmd_idx += 1
                 self.state = 'FETCH_CMD'
 
@@ -136,6 +151,9 @@ class SequenceNavNode(Node):
             
             # 90 degrees is pi/2 radians
             target_angle = (math.pi / 2.0)
+            
+            if should_print:
+                self.get_logger().info(f"   Girando: {math.degrees(abs(delta_theta)):.1f}° / {math.degrees(target_angle):.1f}°")
             
             if abs(delta_theta) < (target_angle - self.turn_tolerance):
                 msg.linear.x = self.linear_speed
@@ -149,7 +167,7 @@ class SequenceNavNode(Node):
                 else:
                     msg.angular.z = -turn_speed
             else:
-                self.get_logger().info(f"Turn {self.state} completed.")
+                self.get_logger().info(f"✅ Curva {self.state} concluída.")
                 self.current_cmd_idx += 1
                 self.state = 'FETCH_CMD'
                 
@@ -157,6 +175,9 @@ class SequenceNavNode(Node):
         elif self.state == 'DONE':
             msg.linear.x = 0.0
             msg.angular.z = 0.0
+
+        if should_print and self.state not in ['FETCH_CMD', 'DONE']:
+             self.get_logger().info(f"   📡 Enviando para as rodas -> Velocidade: {msg.linear.x:.2f}, Giro: {msg.angular.z:.2f}")
 
         # Send speed to robot
         self.publisher_.publish(msg)
