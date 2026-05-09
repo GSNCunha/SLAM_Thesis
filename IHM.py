@@ -1,5 +1,10 @@
-import tkinter as tk
+import sys
 import subprocess
+import signal
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+                             QLabel, QLineEdit, QPushButton, QFrame)
+from PyQt5.QtGui import QFont, QCursor
+from PyQt5.QtCore import Qt
 
 # ==========================================
 # ⚙️ CONFIGURAÇÕES DA IHM
@@ -11,112 +16,150 @@ WORKSPACE = "~/SLAM_Thesis/Desktop/SLAM_Thesis"
 # Comando base: Primeiro acessa a pasta, DEPOIS roda o source do install!
 DOCKER_BASE = f"source /opt/ros/humble/setup.bash && cd {WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
 
-# ==========================================
-# 🚀 PROTOCOLOS DE COMUNICAÇÃO
-# ==========================================
+class IHMRobot(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
 
-def run_remote(command_suffix, title="Terminal"):
-    """Abre o CMD do Windows, faz SSH, entra no Docker e roda o ROS"""
-    current_ip = entry_ip.get().strip()
-    if not current_ip:
-        print("[Erro] O campo de IP está vazio!")
-        return
+    def initUI(self):
+        # Configurações da Janela
+        self.setWindowTitle("IHM de Operação - Burguer Bot")
+        self.setFixedSize(400, 600)
+        self.setStyleSheet("background-color: #1e272e; color: white;")
 
-    # O comando completo que vai rodar lá dentro
-    linux_cmd = f"{DOCKER_BASE} {command_suffix}"
-    
-    # O truque final: aspas duplas por fora para o SSH enviar, e aspas simples por dentro para o bash ler
-    ssh_cmd = f'ssh -t {PI_USER}@{current_ip} "docker exec -it {CONTAINER} bash -c \'{linux_cmd}\'"'
-    
-    # Removemos as aspas em volta de {ssh_cmd} para o Windows não se confundir
-    terminal_cmd = f'start "{title}" cmd /k {ssh_cmd}'
-    
-    subprocess.Popen(terminal_cmd, shell=True)
-    print(f"[IHM] Conectando subsistema: {title} no IP {current_ip}")
+        # Layout Principal (Vertical)
+        layout = QVBoxLayout()
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
 
-def run_local(command, title="Terminal Local"):
-    """Abre um CMD local no seu PC Windows"""
-    terminal_cmd = f'start "{title}" cmd /k "{command}"'
-    subprocess.Popen(terminal_cmd, shell=True)
-    print(f"[IHM] Iniciando rotina local: {title}")
+        # Cabeçalho
+        lbl_title = QLabel("🤖 IHM de Operação")
+        lbl_title.setFont(QFont("Arial", 18, QFont.Bold))
+        lbl_title.setAlignment(Qt.AlignCenter)
+        lbl_title.setStyleSheet("color: #d2dae2;")
+        layout.addWidget(lbl_title)
 
-# ==========================================
-# 🎛️ ROTINAS DE OPERAÇÃO
-# ==========================================
-
-def btn_start_docker():
-    """Acorda o contêiner do Docker no Raspberry Pi"""
-    current_ip = entry_ip.get().strip()
-    if not current_ip:
-        print("[Erro] O campo de IP está vazio!")
-        return
+        # Campo de IP (Layout Horizontal)
+        ip_layout = QHBoxLayout()
+        lbl_ip = QLabel("Endereço IP do Robô:")
+        lbl_ip.setFont(QFont("Arial", 10))
+        lbl_ip.setStyleSheet("color: #bdc3c7;")
         
-    ssh_cmd = f'ssh -t {PI_USER}@{current_ip} "docker start {CONTAINER}"'
-    terminal_cmd = f'start "Inicializando Sistema" cmd /k "{ssh_cmd}"'
-    subprocess.Popen(terminal_cmd, shell=True)
-    print(f"[IHM] Acordando o robô no IP {current_ip}")
+        self.entry_ip = QLineEdit("192.168.1.203")
+        self.entry_ip.setFont(QFont("Arial", 12))
+        self.entry_ip.setStyleSheet("""
+            QLineEdit {
+                background-color: #2f3640; 
+                border: 1px solid #485460; 
+                padding: 5px; 
+                border-radius: 4px;
+                color: white;
+            }
+        """)
+        
+        ip_layout.addWidget(lbl_ip)
+        ip_layout.addWidget(self.entry_ip)
+        layout.addLayout(ip_layout)
 
-def btn_lidar():
-    run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Sensor Lidar")
+        # Função auxiliar para criar botões padronizados
+        def create_btn(text, color, callback):
+            btn = QPushButton(text)
+            btn.setFont(QFont("Arial", 11, QFont.Bold))
+            btn.setCursor(QCursor(Qt.PointingHandCursor))
+            btn.setFixedHeight(50)
+            # Aplicando CSS para um design moderno
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {color};
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                }}
+                QPushButton:hover {{
+                    background-color: {color};
+                    border: 2px solid white; /* Efeito de hover */
+                }}
+                QPushButton:pressed {{
+                    background-color: #2c3e50; /* Cor ao clicar */
+                }}
+            """)
+            btn.clicked.connect(callback)
+            return btn
 
-def btn_motores():
-    run_remote("python3 base_controller.py", "Tração e Odometria")
+        # Adicionando os Botões
+        layout.addWidget(create_btn("0. Inicializar Sistema (Docker)", "#8e44ad", self.btn_start_docker))
+        layout.addWidget(create_btn("1. Iniciar Sensor (Lidar)", "#c0392b", self.btn_lidar))
+        layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
+        layout.addWidget(create_btn("3. Processamento SLAM", "#f39c12", self.btn_slam))
+        layout.addWidget(create_btn("4. Iniciar Rota Autônoma", "#27ae60", self.btn_nav))
+        
 
-def btn_slam():
-    run_remote("ros2 launch fastslam_thesis fastslam.launch.py", "Mapeamento SLAM")
+        # Linha Divisória
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setStyleSheet("background-color: #485460;")
+        layout.addWidget(line)
 
-def btn_nav():
-    run_remote("python3 simple_path.py", "Navegação Autônoma")
+        layout.addWidget(create_btn("💻 Abrir Visualizador 3D", "#2980b9", self.btn_rviz))
 
-def btn_rviz():
-    run_local("set ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
+        self.setLayout(layout)
 
-# ==========================================
-# 🎨 INTERFACE HOMEM-MÁQUINA (GUI)
-# ==========================================
+ # ==========================================
+    # 🚀 PROTOCOLOS DE COMUNICAÇÃO
+    # ==========================================
+    def run_remote(self, command_suffix, title="Terminal"):
+        current_ip = self.entry_ip.text().strip()
+        if not current_ip:
+            print("[Erro] O campo de IP está vazio!")
+            return
 
-# Inicialização da tela
-root = tk.Tk()
-root.title("IHM de Operação - Burguer Bot")
-root.geometry("380x560") 
-root.configure(bg="#1e272e")
+        # 1. Comando base que vai rodar DENTRO do docker
+        linux_cmd = f"{DOCKER_BASE} {command_suffix}"
+        
+        # 2. Comando SSH: Usamos aspas duplas escapadas (\\") para o bash interno do docker
+        ssh_cmd = f"ssh -t {PI_USER}@{current_ip} \"docker exec -it {CONTAINER} bash -c \\\"{linux_cmd}\\\"\""
+        
+        # 3. Comando Terminal: Envolvemos o bash -c com aspas SIMPLES ('...') 
+        # Isso evita que as aspas duplas do comando SSH quebrem a string principal
+        terminal_cmd = f"gnome-terminal --title=\"{title}\" -- bash -c '{ssh_cmd}; exec bash'"
+        
+        subprocess.Popen(terminal_cmd, shell=True)
+        print(f"[IHM] Conectando subsistema: {title} no IP {current_ip}")
 
-# Cabeçalho da IHM
-lbl_title = tk.Label(root, text="🤖 IHM de Operação", font=("Arial", 18, "bold"), bg="#1e272e", fg="#d2dae2")
-lbl_title.pack(pady=(20, 5))
+    # ==========================================
+    # 🎛️ ROTINAS DE OPERAÇÃO
+    # ==========================================
+    def btn_start_docker(self):
+        current_ip = self.entry_ip.text().strip()
+        if not current_ip:
+            print("[Erro] O campo de IP está vazio!")
+            return
+        ssh_cmd = f"ssh -t {PI_USER}@{current_ip} 'docker start {CONTAINER}'"
+        terminal_cmd = f"gnome-terminal --title=\"Inicializando Sistema\" -- bash -c \"{ssh_cmd}; exec bash\""
+        subprocess.Popen(terminal_cmd, shell=True)
+        print(f"[IHM] Acordando o robô no IP {current_ip}")
 
-# Campo de IP
-frame_ip = tk.Frame(root, bg="#1e272e")
-frame_ip.pack(pady=10)
+    def btn_lidar(self):
+        self.run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Sensor Lidar")
 
-lbl_ip = tk.Label(frame_ip, text="Endereço IP do Robô:", font=("Arial", 10), bg="#1e272e", fg="#bdc3c7")
-lbl_ip.pack(side=tk.LEFT, padx=5)
+    def btn_motores(self):
+        self.run_remote("python3 base_controller.py", "Tração e Odometria")
 
-entry_ip = tk.Entry(frame_ip, font=("Arial", 12), width=15, bg="#2f3640", fg="white", insertbackground="white")
-entry_ip.insert(0, "192.168.1.203") 
-entry_ip.pack(side=tk.LEFT)
+    def btn_slam(self):
+        self.run_remote("ros2 launch fastslam_thesis fastslam.launch.py", "Mapeamento SLAM")
 
-# Estilo dos botões
-btn_style = {"font": ("Arial", 11, "bold"), "width": 26, "height": 2, "cursor": "hand2", "borderwidth": 0}
+    def btn_nav(self):
+        self.run_remote("python3 simple_path.py", "Navegação Autônoma")
 
-# Botão NOVO de Inicialização
-tk.Button(root, text="0. Inicializar Sistema (Docker)", bg="#8e44ad", fg="white", command=btn_start_docker, **btn_style).pack(pady=(5, 15))
+    def btn_rviz(self):
+        self.run_local("source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
 
-# Botões de Ação do Robô
-tk.Button(root, text="1. Iniciar Sensor (Lidar)", bg="#c0392b", fg="white", command=btn_lidar, **btn_style).pack(pady=5)
-tk.Button(root, text="2. Acoplar Tração (Motores)", bg="#d35400", fg="white", command=btn_motores, **btn_style).pack(pady=5)
-tk.Button(root, text="3. Processamento SLAM", bg="#f39c12", fg="white", command=btn_slam, **btn_style).pack(pady=5)
-tk.Button(root, text="4. Iniciar Rota Autônoma", bg="#27ae60", fg="white", command=btn_nav, **btn_style).pack(pady=5)
-
-tk.Frame(root, height=2, bg="#485460", width=330).pack(pady=15)
-
-tk.Button(root, text="💻 Abrir Visualizador 3D", bg="#2980b9", fg="white", command=btn_rviz, **btn_style).pack(pady=5)
-
-# Permitir que Ctrl+C no terminal feche o programa graciosamente
-import signal
-try:
+if __name__ == '__main__':
+    # Permitir fechamento via Ctrl+C no terminal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-except AttributeError:
-    pass
-
-root.mainloop()
+    
+    app = QApplication(sys.argv)
+    ihm = IHMRobot()
+    ihm.show()
+    sys.exit(app.exec_())
