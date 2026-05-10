@@ -28,12 +28,12 @@ public:
     FastSlamNode() : Node("fastslam_node") {
         // =============================================================================
         //                           SET FASTSLAM PARAMETERS
-        this->declare_parameter("particle_count", 50);     // Number of particles
-        this->declare_parameter("map_resolution", 0.1);    // Map pixel size in m
-        this->declare_parameter("map_width", 200);          // Map width
-        this->declare_parameter("map_height", 200);         // Map height
-        this->declare_parameter("linear_update", 0.05);     // Map is updated for every X m traveled
-        this->declare_parameter("angular_update", 0.1);     // Map is updated for every X rad traveled
+        this->declare_parameter("particle_count", 300);     // Number of particles
+        this->declare_parameter("map_resolution", 0.05);    // Map pixel size in m
+        this->declare_parameter("map_width", 400);         // Map width
+        this->declare_parameter("map_height", 400);        // Map height
+        this->declare_parameter("linear_update", 0.05);    // Map is updated for every X m traveled
+        this->declare_parameter("angular_update", 0.1);    // Map is updated for every X rad traveled
         // =============================================================================
         //                          SET MOVEMENT AND SENSING PARAMENTERS
         // MOTION MODEL INDEXES:
@@ -50,11 +50,9 @@ public:
         measurement_model_ = std::make_unique<MeasurementModel>(0.95, 0.05, 0.5, 3.5);
         // =============================================================================
 
-
         particle_count_ = this->get_parameter("particle_count").as_int();           // Get arguments
         update_dist_linear_ = this->get_parameter("linear_update").as_double();     // Get arguments
         update_dist_angular_ = this->get_parameter("angular_update").as_double();   // Get arguments
-
 
         grid_mapper_ = std::make_unique<GridMapper>();                              // Grid storage for the map
         
@@ -62,16 +60,21 @@ public:
 
         rclcpp::QoS qos(10);                                                        // Size of buffer for receiving messages from topics
 
-        scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(                         //scan_sub is receiving the information the subscription in the "/scan" topic, this subscription passes as argument to scanCallback the message received
+        scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(         //scan_sub is receiving the information the subscription in the "/scan" topic, this subscription passes as argument to scanCallback the message received
             "/scan", qos, std::bind(&FastSlamNode::scanCallback, this, _1));
             
-        odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(                             //odom_sub_is receiving the information the subscription in the "/odom" topic, this subscription passes as argument to odomCallback the message received
+        odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(             //odom_sub_is receiving the information the subscription in the "/odom" topic, this subscription passes as argument to odomCallback the message received
             "/odom", qos, std::bind(&FastSlamNode::odomCallback, this, _1));
 
+        // FIX 1: Configuração de QoS correta para o RViz aceitar o mapa!
         rclcpp::QoS map_qos(1);
-        map_qos.best_effort();
+        map_qos.reliable();
+        map_qos.transient_local();
         map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", map_qos);
                 
+        // FIX 2: O Assassino do Segfault! Criando o publicador das partículas
+        particles_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("/particles", 10);
+
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);                   //create an object to handle for handling rotation math (Quaternions)
 
         RCLCPP_INFO(this->get_logger(), "FastSLAM Node Starting with %d particles.", particle_count_); //print inicializzation
