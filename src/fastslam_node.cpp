@@ -29,9 +29,9 @@ public:
         // =============================================================================
         //                           SET FASTSLAM PARAMETERS
         this->declare_parameter("particle_count", 50);     // Number of particles
-        this->declare_parameter("map_resolution", 0.05);    // Map pixel size in m
-        this->declare_parameter("map_width", 400);          // Map width
-        this->declare_parameter("map_height", 400);         // Map height
+        this->declare_parameter("map_resolution", 0.1);    // Map pixel size in m
+        this->declare_parameter("map_width", 200);          // Map width
+        this->declare_parameter("map_height", 200);         // Map height
         this->declare_parameter("linear_update", 0.05);     // Map is updated for every X m traveled
         this->declare_parameter("angular_update", 0.1);     // Map is updated for every X rad traveled
         // =============================================================================
@@ -276,19 +276,19 @@ private:
         static int publish_counter = 0;
         publish_counter++;
 
-        if (publish_counter >= 10) { // Se o Lidar roda a 10Hz, 10 ciclos = 1 segundo
+        if (publish_counter >= 10) { 
             
             // Map publication 
-            auto map_msg = best_p.map;                  // Get particles map 
-            map_msg.header.stamp = this->now();         // Get current time
-            map_msg.header.frame_id = "map";            // Set map Id to "map"   
-            map_pub_->publish(map_msg);                 // Publish map
+            auto map_msg = best_p.map;                  
+            map_msg.header.stamp = this->now();         
+            map_msg.header.frame_id = "map";            
+            map_pub_->publish(map_msg);                 
 
             // Particles publication
-            geometry_msgs::msg::PoseArray poses_msg;    //  Set message of Pose to publish particles poses
-            poses_msg.header.stamp = this->now();       //  Get current time
-            poses_msg.header.frame_id = "map";          //  Set map Id to "map"
-            for(const auto& p : particles_) {           //  Get information fro each particle
+            geometry_msgs::msg::PoseArray poses_msg;    
+            poses_msg.header.stamp = this->now();       
+            poses_msg.header.frame_id = "map";          
+            for(const auto& p : particles_) {           
                 geometry_msgs::msg::Pose pose;
                 pose.position.x = p.x;
                 pose.position.y = p.y;
@@ -297,39 +297,39 @@ private:
                 pose.orientation = tf2::toMsg(q);
                 poses_msg.poses.push_back(pose);
             }
-            particles_pub_->publish(poses_msg);         // Publish particles 
+            particles_pub_->publish(poses_msg);         
 
-            publish_counter = 0; // Zera o contador após publicar
+            publish_counter = 0; // Zera o contador
         }
 
         // =================================================================
         // BLOCO 2: ÁRVORE TF - Roda na velocidade máxima (10Hz)
         // =================================================================
-        geometry_msgs::msg::TransformStamped tf_msg; // Create TF message container
-        tf_msg.header.stamp = this->now();           // Set timestamp
-        tf_msg.header.frame_id = "map";              // Parent frame is map
-        tf_msg.child_frame_id = "odom";              // Child frame is odom (correcting odom drift)
+        geometry_msgs::msg::TransformStamped tf_msg; 
+        tf_msg.header.stamp = this->now();           
+        tf_msg.header.frame_id = "map";              
+        tf_msg.child_frame_id = "odom";              
         
-        tf2::Transform t_map_base;                                      // Create transform Map -> Base_link
-        t_map_base.setOrigin(tf2::Vector3(best_p.x, best_p.y, 0.0));    // Set translation from particle
-        tf2::Quaternion q_map_base;                                     // Create quaternion for map_base
-        q_map_base.setRPY(0, 0, best_p.theta);                          // Set rotation from particle
-        t_map_base.setRotation(q_map_base);                             // Apply rotation to transform
+        tf2::Transform t_map_base;                                      
+        t_map_base.setOrigin(tf2::Vector3(best_p.x, best_p.y, 0.0));    
+        tf2::Quaternion q_map_base;                                     
+        q_map_base.setRPY(0, 0, best_p.theta);                          
+        t_map_base.setRotation(q_map_base);                             
 
-        tf2::Transform t_odom_base;                                                // Create transform Odom -> Base_link
-        t_odom_base.setOrigin(tf2::Vector3(current_odom_pose_.x_, current_odom_pose_.y_, 0.0));    // Set translation from raw odometry
-        tf2::Quaternion q_odom_base;                                               // Create quaternion for odom_base
-        q_odom_base.setRPY(0, 0, current_odom_pose_.theta_);                       // Set rotation from raw odometry
-        t_odom_base.setRotation(q_odom_base);                                      // Apply rotation to transform
+        tf2::Transform t_odom_base;                                                
+        t_odom_base.setOrigin(tf2::Vector3(current_odom_pose_.x_, current_odom_pose_.y_, 0.0));    
+        tf2::Quaternion q_odom_base;                                               
+        q_odom_base.setRPY(0, 0, current_odom_pose_.theta_);                       
+        t_odom_base.setRotation(q_odom_base);                                      
 
-        tf2::Transform t_map_odom = t_map_base * t_odom_base.inverse(); // Math: Calculate the correction (Map -> Odom = Map->Base * Base->Odom)
+        tf2::Transform t_map_odom = t_map_base * t_odom_base.inverse(); 
 
-        tf_msg.transform.translation.x = t_map_odom.getOrigin().x();        // Fill translation X
-        tf_msg.transform.translation.y = t_map_odom.getOrigin().y();        // Fill translation Y
-        tf_msg.transform.translation.z = 0.0;                               // Z is 0 for 2D SLAM
-        tf_msg.transform.rotation = tf2::toMsg(t_map_odom.getRotation());   // Fill rotation
+        tf_msg.transform.translation.x = t_map_odom.getOrigin().x();        
+        tf_msg.transform.translation.y = t_map_odom.getOrigin().y();        
+        tf_msg.transform.translation.z = 0.0;                               
+        tf_msg.transform.rotation = tf2::toMsg(t_map_odom.getRotation());   
 
-        tf_broadcaster_->sendTransform(tf_msg);                             // Broadcast the correction transform to ROS
+        tf_broadcaster_->sendTransform(tf_msg);                             
     }
 };
 int main(int argc, char** argv) {

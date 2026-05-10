@@ -24,7 +24,7 @@ class IHMRobot(QWidget):
     def initUI(self):
         # Configurações da Janela
         self.setWindowTitle("IHM de Operação - Burguer Bot")
-        self.setFixedSize(400, 600)
+        self.setFixedSize(400, 650) # Aumentei um pouquinho a altura para caber o novo botão
         self.setStyleSheet("background-color: #1e272e; color: white;")
 
         # Layout Principal (Vertical)
@@ -88,6 +88,10 @@ class IHMRobot(QWidget):
 
         # Adicionando os Botões
         layout.addWidget(create_btn("0. Inicializar Sistema (Docker)", "#8e44ad", self.btn_start_docker))
+        
+        # NOVO BOTÃO DE BUILD ADICIONADO AQUI
+        layout.addWidget(create_btn("⚙️ Recompilar Código (Build)", "#7f8c8d", self.btn_build))
+        
         layout.addWidget(create_btn("1. Iniciar Sensor (Lidar)", "#c0392b", self.btn_lidar))
         layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
         layout.addWidget(create_btn("🛑 PARAR MOTORES", "#e74c3c", self.btn_parar_motores))
@@ -153,6 +157,12 @@ class IHMRobot(QWidget):
         terminal_cmd = f"gnome-terminal --title=\"Inicializando Sistema\" -- bash -c \"{ssh_cmd}; exec bash\""
         subprocess.Popen(terminal_cmd, shell=True)
         print(f"[IHM] Acordando o robô no IP {current_ip}")
+
+    # NOVA FUNÇÃO DE BUILD
+    def btn_build(self):
+        # Encadeia os builds: Primeiro compila o Lidar, depois o FastSLAM (raiz) e finaliza com source
+        build_cmd = "colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && colcon build --symlink-install && source install/setup.bash"
+        self.run_remote(build_cmd, "Compilador (Colcon Build)")
 
     def run_local(self, command, title="Terminal Local"):
         """Abre um gnome-terminal local no seu PC Ubuntu"""
