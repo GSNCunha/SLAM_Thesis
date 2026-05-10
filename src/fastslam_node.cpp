@@ -157,7 +157,9 @@ private:
 
         double dist_sq = dx*dx + dy*dy;                                                // total linear pose change
 
-        if (dist_sq < (update_dist_linear_*update_dist_linear_) && dth < update_dist_angular_) {        //if the pose change is not big enough, no further calculation is done
+        if (dist_sq < (update_dist_linear_*update_dist_linear_) && dth < update_dist_angular_) {        
+            // FIX: Mantém a Árvore TF e o Mapa vivos no RViz mesmo com o robô parado!
+            publishResults(msg->header.stamp); 
             return;
         }
 
