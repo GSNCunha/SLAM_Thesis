@@ -1,1 +1,1 @@
-/root/SLAM_Thesis/Desktop/SLAM_Thesis/launch/fastslam.launch.py
+/home/gabriel/Desktop/SLAM_Thesis/launch/fastslam.launch.py

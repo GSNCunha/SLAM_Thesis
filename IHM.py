@@ -24,7 +24,7 @@ class IHMRobot(QWidget):
     def initUI(self):
         # Configurações da Janela
         self.setWindowTitle("IHM de Operação - Burguer Bot")
-        self.setFixedSize(400, 700) # Altura ajustada para caber o novo botão
+        self.setFixedSize(400, 760) # Altura ajustada para caber o novo botão
         self.setStyleSheet("background-color: #1e272e; color: white;")
 
         # Layout Principal (Vertical)
@@ -97,6 +97,10 @@ class IHMRobot(QWidget):
         layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
         layout.addWidget(create_btn("🛑 PARAR MOTORES", "#e74c3c", self.btn_parar_motores))
         layout.addWidget(create_btn("3. Processamento SLAM", "#f39c12", self.btn_slam))
+        
+        # NOVO BOTÃO: GRAVAR ROSBAG
+        layout.addWidget(create_btn("⏺️ Gravar Dados (Rosbag)", "#16a085", self.btn_rosbag))
+        
         layout.addWidget(create_btn("4. Iniciar Rota Autônoma", "#27ae60", self.btn_nav))
         
         # Linha Divisória
@@ -158,7 +162,6 @@ class IHMRobot(QWidget):
         subprocess.Popen(terminal_cmd, shell=True)
         print(f"[IHM] Acordando o robô no IP {current_ip}")
 
-    # NOVA FUNÇÃO: REINICIAR DOCKER
     def btn_restart_docker(self):
         current_ip = self.entry_ip.text().strip()
         if not current_ip:
@@ -192,6 +195,10 @@ class IHMRobot(QWidget):
 
     def btn_slam(self):
         self.run_remote("ros2 launch fastslam_thesis fastslam.launch.py", "Mapeamento SLAM")
+
+    # NOVA FUNÇÃO: GRAVAR ROSBAG
+    def btn_rosbag(self):
+        self.run_remote("ros2 bag record /scan /tf /tf_static /odom", "Gravador Rosbag")
 
     def btn_nav(self):
         self.run_remote("python3 simple_path.py", "Navegação Autônoma")
