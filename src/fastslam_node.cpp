@@ -229,7 +229,7 @@ private:
 
         last_update_odom_ = current_odom_pose_;     // Update the last pose 
 
-        publishResults();                           // Getting the best particle and publishing its information
+        publishResults(msg->header.stamp);                          // Getting the best particle and publishing its information
     }
 
     void normalizeWeights(double total_weight) {   // Normaization of weights ( all the weights together need to sum up to 1)
@@ -268,26 +268,21 @@ private:
         particles_ = new_particles;                                             // Get new particles to the original vector
     }
 
-    void publishResults() {
-        const auto& best_p = particles_[0];         // Get a particle
+    void publishResults(rclcpp::Time current_time) {
+        const auto& best_p = particles_[0];         
 
-        // =================================================================
-        // BLOCO 1: FREIO DE MÃO (MAPA E PARTÍCULAS) - Roda devagar (Ex: 1Hz)
-        // =================================================================
         static int publish_counter = 0;
         publish_counter++;
 
         if (publish_counter >= 10) { 
             
-            // Map publication 
             auto map_msg = best_p.map;                  
-            map_msg.header.stamp = this->now();         
+            map_msg.header.stamp = current_time;    // <--- AQUI (Relógio Sincronizado)     
             map_msg.header.frame_id = "map";            
             map_pub_->publish(map_msg);                 
 
-            // Particles publication
             geometry_msgs::msg::PoseArray poses_msg;    
-            poses_msg.header.stamp = this->now();       
+            poses_msg.header.stamp = current_time;  // <--- AQUI (Relógio Sincronizado)     
             poses_msg.header.frame_id = "map";          
             for(const auto& p : particles_) {           
                 geometry_msgs::msg::Pose pose;
@@ -300,14 +295,11 @@ private:
             }
             particles_pub_->publish(poses_msg);         
 
-            publish_counter = 0; // Zera o contador
+            publish_counter = 0; 
         }
 
-        // =================================================================
-        // BLOCO 2: ÁRVORE TF - Roda na velocidade máxima (10Hz)
-        // =================================================================
         geometry_msgs::msg::TransformStamped tf_msg; 
-        tf_msg.header.stamp = this->now();           
+        tf_msg.header.stamp = current_time;         // <--- AQUI (Relógio Sincronizado)           
         tf_msg.header.frame_id = "map";              
         tf_msg.child_frame_id = "odom";              
         
