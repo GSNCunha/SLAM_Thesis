@@ -28,7 +28,7 @@ public:
     FastSlamNode() : Node("fastslam_node") {
         // =============================================================================
         //                           SET FASTSLAM PARAMETERS
-        this->declare_parameter("particle_count", 300);     // Number of particles
+        this->declare_parameter("particle_count", 50);     // Number of particles
         this->declare_parameter("map_resolution", 0.05);    // Map pixel size in m
         this->declare_parameter("map_width", 400);          // Map width
         this->declare_parameter("map_height", 400);         // Map height
@@ -270,28 +270,41 @@ private:
     void publishResults() {
         const auto& best_p = particles_[0];         // Get a particle
 
-        // Map publication 
-        auto map_msg = best_p.map;                  // Get particles map 
-        map_msg.header.stamp = this->now();         // Get current time
-        map_msg.header.frame_id = "map";            // Set map Id to "map"    
-        map_pub_->publish(map_msg);                 // Publish map
+        // =================================================================
+        // BLOCO 1: FREIO DE MÃO (MAPA E PARTÍCULAS) - Roda devagar (Ex: 1Hz)
+        // =================================================================
+        static int publish_counter = 0;
+        publish_counter++;
 
-        
-        // Particles publication
-        geometry_msgs::msg::PoseArray poses_msg;    //  Set message of Pose to publish particles poses
-        poses_msg.header.stamp = this->now();       //  Get current time
-        poses_msg.header.frame_id = "map";          //  Set map Id to "map"
-        for(const auto& p : particles_) {           //  Get information fro each particle
-            geometry_msgs::msg::Pose pose;
-            pose.position.x = p.x;
-            pose.position.y = p.y;
-            tf2::Quaternion q;
-            q.setRPY(0, 0, p.theta);
-            pose.orientation = tf2::toMsg(q);
-            poses_msg.poses.push_back(pose);
+        if (publish_counter >= 10) { // Se o Lidar roda a 10Hz, 10 ciclos = 1 segundo
+            
+            // Map publication 
+            auto map_msg = best_p.map;                  // Get particles map 
+            map_msg.header.stamp = this->now();         // Get current time
+            map_msg.header.frame_id = "map";            // Set map Id to "map"   
+            map_pub_->publish(map_msg);                 // Publish map
+
+            // Particles publication
+            geometry_msgs::msg::PoseArray poses_msg;    //  Set message of Pose to publish particles poses
+            poses_msg.header.stamp = this->now();       //  Get current time
+            poses_msg.header.frame_id = "map";          //  Set map Id to "map"
+            for(const auto& p : particles_) {           //  Get information fro each particle
+                geometry_msgs::msg::Pose pose;
+                pose.position.x = p.x;
+                pose.position.y = p.y;
+                tf2::Quaternion q;
+                q.setRPY(0, 0, p.theta);
+                pose.orientation = tf2::toMsg(q);
+                poses_msg.poses.push_back(pose);
+            }
+            particles_pub_->publish(poses_msg);         // Publish particles 
+
+            publish_counter = 0; // Zera o contador após publicar
         }
-        particles_pub_->publish(poses_msg);         // Publish particles 
 
+        // =================================================================
+        // BLOCO 2: ÁRVORE TF - Roda na velocidade máxima (10Hz)
+        // =================================================================
         geometry_msgs::msg::TransformStamped tf_msg; // Create TF message container
         tf_msg.header.stamp = this->now();           // Set timestamp
         tf_msg.header.frame_id = "map";              // Parent frame is map
@@ -303,11 +316,11 @@ private:
         q_map_base.setRPY(0, 0, best_p.theta);                          // Set rotation from particle
         t_map_base.setRotation(q_map_base);                             // Apply rotation to transform
 
-        tf2::Transform t_odom_base;                                                                // Create transform Odom -> Base_link
+        tf2::Transform t_odom_base;                                                // Create transform Odom -> Base_link
         t_odom_base.setOrigin(tf2::Vector3(current_odom_pose_.x_, current_odom_pose_.y_, 0.0));    // Set translation from raw odometry
-        tf2::Quaternion q_odom_base;                                                               // Create quaternion for odom_base
-        q_odom_base.setRPY(0, 0, current_odom_pose_.theta_);                                       // Set rotation from raw odometry
-        t_odom_base.setRotation(q_odom_base);                                                      // Apply rotation to transform
+        tf2::Quaternion q_odom_base;                                               // Create quaternion for odom_base
+        q_odom_base.setRPY(0, 0, current_odom_pose_.theta_);                       // Set rotation from raw odometry
+        t_odom_base.setRotation(q_odom_base);                                      // Apply rotation to transform
 
         tf2::Transform t_map_odom = t_map_base * t_odom_base.inverse(); // Math: Calculate the correction (Map -> Odom = Map->Base * Base->Odom)
 
@@ -319,7 +332,6 @@ private:
         tf_broadcaster_->sendTransform(tf_msg);                             // Broadcast the correction transform to ROS
     }
 };
-
 int main(int argc, char** argv) {
     rclcpp::init(argc, argv);                       // Initialize ROS 2 communication
     auto node = std::make_shared<FastSlamNode>();   // Create the FastSLAM node instance

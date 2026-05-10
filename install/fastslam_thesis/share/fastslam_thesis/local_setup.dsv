@@ -1,2 +1,1 @@
-source;share/fastslam_thesis/environment/ament_prefix_path.sh
-source;share/fastslam_thesis/environment/path.sh
+/root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/ament_cmake_environment_hooks/local_setup.dsv
