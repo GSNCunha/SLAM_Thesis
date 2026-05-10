@@ -68,9 +68,10 @@ public:
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(                             //odom_sub_is receiving the information the subscription in the "/odom" topic, this subscription passes as argument to odomCallback the message received
             "/odom", qos, std::bind(&FastSlamNode::odomCallback, this, _1));
 
-        map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", 1);                 //map_pub_ publishes the FastSlam map
-        particles_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("/particles", 1);    //paticles_pub_ publishes all the particles
-        
+        rclcpp::QoS map_qos(1);
+        map_qos.best_effort();
+        map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", map_qos);
+                
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);                   //create an object to handle for handling rotation math (Quaternions)
 
         RCLCPP_INFO(this->get_logger(), "FastSLAM Node Starting with %d particles.", particle_count_); //print inicializzation

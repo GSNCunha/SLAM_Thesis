@@ -14,7 +14,8 @@ CONTAINER = "slam_container_thesis"
 WORKSPACE = "~/SLAM_Thesis/Desktop/SLAM_Thesis"
 
 # Comando base: Primeiro acessa a pasta, DEPOIS roda o source do install!
-DOCKER_BASE = f"source /opt/ros/humble/setup.bash && cd {WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
+# Comando base atualizado com CycloneDDS
+DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
 
 class IHMRobot(QWidget):
     def __init__(self):
@@ -187,7 +188,7 @@ class IHMRobot(QWidget):
         self.run_remote("python3 simple_path.py", "Navegação Autônoma")
 
     def btn_rviz(self):
-        self.run_local("source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
+            self.run_local("export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
 
 if __name__ == '__main__':
     # Permitir fechamento via Ctrl+C no terminal
