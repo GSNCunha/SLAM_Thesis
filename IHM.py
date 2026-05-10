@@ -90,6 +90,7 @@ class IHMRobot(QWidget):
         layout.addWidget(create_btn("0. Inicializar Sistema (Docker)", "#8e44ad", self.btn_start_docker))
         layout.addWidget(create_btn("1. Iniciar Sensor (Lidar)", "#c0392b", self.btn_lidar))
         layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
+        layout.addWidget(create_btn("🛑 PARAR MOTORES", "#e74c3c", self.btn_parar_motores))
         layout.addWidget(create_btn("3. Processamento SLAM", "#f39c12", self.btn_slam))
         layout.addWidget(create_btn("4. Iniciar Rota Autônoma", "#27ae60", self.btn_nav))
         
@@ -117,7 +118,7 @@ class IHMRobot(QWidget):
         # 1. Comando base que vai rodar DENTRO do docker
         linux_cmd = f"{DOCKER_BASE} {command_suffix}"
         
-        # 2. Comando SSH: Usamos aspas duplas escapadas (\\") para o bash interno do docker
+        # 2. Comando SSH: Usamos aspas duplas escapadas (\") para o bash interno do docker
         ssh_cmd = f"ssh -t {PI_USER}@{current_ip} \"docker exec -it {CONTAINER} bash -c \\\"{linux_cmd}\\\"\""
         
         # 3. Comando Terminal: Envolvemos o bash -c com aspas SIMPLES ('...') 
@@ -126,6 +127,19 @@ class IHMRobot(QWidget):
         
         subprocess.Popen(terminal_cmd, shell=True)
         print(f"[IHM] Conectando subsistema: {title} no IP {current_ip}")
+
+    def run_remote_silent(self, command_suffix):
+        """ Executa um comando SSH no docker sem abrir uma nova janela do terminal """
+        current_ip = self.entry_ip.text().strip()
+        if not current_ip:
+            print("[Erro] O campo de IP está vazio!")
+            return
+
+        linux_cmd = f"{DOCKER_BASE} {command_suffix}"
+        ssh_cmd = f"ssh {PI_USER}@{current_ip} \"docker exec {CONTAINER} bash -c \\\"{linux_cmd}\\\"\""
+        
+        subprocess.Popen(ssh_cmd, shell=True)
+        print(f"[IHM] 🛑 Comando de parada enviado para o IP {current_ip}")
 
     # ==========================================
     # 🎛️ ROTINAS DE OPERAÇÃO
@@ -140,11 +154,21 @@ class IHMRobot(QWidget):
         subprocess.Popen(terminal_cmd, shell=True)
         print(f"[IHM] Acordando o robô no IP {current_ip}")
 
+    def run_local(self, command, title="Terminal Local"):
+        """Abre um gnome-terminal local no seu PC Ubuntu"""
+        terminal_cmd = f"gnome-terminal --title=\"{title}\" -- bash -c \"{command}; exec bash\""
+        subprocess.Popen(terminal_cmd, shell=True)
+        print(f"[IHM] Iniciando rotina local: {title}")
+
     def btn_lidar(self):
         self.run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Sensor Lidar")
 
     def btn_motores(self):
         self.run_remote("python3 base_controller.py", "Tração e Odometria")
+
+    def btn_parar_motores(self):
+        stop_cmd = "ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
+        self.run_remote_silent(stop_cmd)
 
     def btn_slam(self):
         self.run_remote("ros2 launch fastslam_thesis fastslam.launch.py", "Mapeamento SLAM")
