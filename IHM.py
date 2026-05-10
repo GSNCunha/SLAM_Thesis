@@ -13,7 +13,6 @@ PI_USER = "burguer"
 CONTAINER = "slam_container_thesis"
 WORKSPACE = "~/SLAM_Thesis/Desktop/SLAM_Thesis"
 
-# Comando base: Primeiro acessa a pasta, DEPOIS roda o source do install!
 # Comando base atualizado com CycloneDDS
 DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
 
@@ -25,7 +24,7 @@ class IHMRobot(QWidget):
     def initUI(self):
         # Configurações da Janela
         self.setWindowTitle("IHM de Operação - Burguer Bot")
-        self.setFixedSize(400, 650) # Aumentei um pouquinho a altura para caber o novo botão
+        self.setFixedSize(400, 700) # Altura ajustada para caber o novo botão
         self.setStyleSheet("background-color: #1e272e; color: white;")
 
         # Layout Principal (Vertical)
@@ -90,16 +89,16 @@ class IHMRobot(QWidget):
         # Adicionando os Botões
         layout.addWidget(create_btn("0. Inicializar Sistema (Docker)", "#8e44ad", self.btn_start_docker))
         
-        # NOVO BOTÃO DE BUILD ADICIONADO AQUI
+        # NOVO BOTÃO: REINICIAR DOCKER
+        layout.addWidget(create_btn("🔄 Reiniciar Docker (Reset)", "#34495e", self.btn_restart_docker))
+
         layout.addWidget(create_btn("⚙️ Recompilar Código (Build)", "#7f8c8d", self.btn_build))
-        
         layout.addWidget(create_btn("1. Iniciar Sensor (Lidar)", "#c0392b", self.btn_lidar))
         layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
         layout.addWidget(create_btn("🛑 PARAR MOTORES", "#e74c3c", self.btn_parar_motores))
         layout.addWidget(create_btn("3. Processamento SLAM", "#f39c12", self.btn_slam))
         layout.addWidget(create_btn("4. Iniciar Rota Autônoma", "#27ae60", self.btn_nav))
         
-
         # Linha Divisória
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
@@ -111,7 +110,7 @@ class IHMRobot(QWidget):
 
         self.setLayout(layout)
 
- # ==========================================
+    # ==========================================
     # 🚀 PROTOCOLOS DE COMUNICAÇÃO
     # ==========================================
     def run_remote(self, command_suffix, title="Terminal"):
@@ -159,7 +158,17 @@ class IHMRobot(QWidget):
         subprocess.Popen(terminal_cmd, shell=True)
         print(f"[IHM] Acordando o robô no IP {current_ip}")
 
-    # NOVA FUNÇÃO DE BUILD
+    # NOVA FUNÇÃO: REINICIAR DOCKER
+    def btn_restart_docker(self):
+        current_ip = self.entry_ip.text().strip()
+        if not current_ip:
+            print("[Erro] O campo de IP está vazio!")
+            return
+        ssh_cmd = f"ssh -t {PI_USER}@{current_ip} 'docker restart {CONTAINER}'"
+        terminal_cmd = f"gnome-terminal --title=\"Reiniciando Docker\" -- bash -c \"{ssh_cmd}; exec bash\""
+        subprocess.Popen(terminal_cmd, shell=True)
+        print(f"[IHM] Reiniciando o contêiner no IP {current_ip} (Limpando processos zumbis)")
+
     def btn_build(self):
         # Encadeia os builds: Primeiro compila o Lidar, depois o FastSLAM (raiz) e finaliza com source
         build_cmd = "colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && colcon build --symlink-install && source install/setup.bash"
@@ -188,7 +197,7 @@ class IHMRobot(QWidget):
         self.run_remote("python3 simple_path.py", "Navegação Autônoma")
 
     def btn_rviz(self):
-            self.run_local("export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
+        self.run_local("export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
 
 if __name__ == '__main__':
     # Permitir fechamento via Ctrl+C no terminal

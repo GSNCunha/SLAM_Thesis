@@ -10,12 +10,13 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': False,
-            'particle_count': 300,
-            'map_resolution': 0.05,
-            'map_width': 400,
-            'map_height': 400,
+            'particle_count': 50,
+            'map_resolution': 15,
+            'map_width': 200,
+            'map_height': 200,
             'linear_update': 0.2,
             'angular_update': 0.2
         }]
     )
     return LaunchDescription([fastslam_node])
+                                
