@@ -11,7 +11,7 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': False,
             'particle_count': 50,
-            'map_resolution': 15,
+            'map_resolution': 0.1,
             'map_width': 200,
             'map_height': 200,
             'linear_update': 0.2,
