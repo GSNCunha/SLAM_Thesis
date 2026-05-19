@@ -1,8 +1,8 @@
-# Install script for directory: /home/gabriel/Desktop/SLAM_Thesis
+# Install script for directory: /root/SLAM_Thesis/Desktop/SLAM_Thesis
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/gabriel/Desktop/SLAM_Thesis/install/fastslam_thesis")
+  set(CMAKE_INSTALL_PREFIX "/root/SLAM_Thesis/Desktop/SLAM_Thesis/install/fastslam_thesis")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -43,7 +43,7 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  include("/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/ament_cmake_symlink_install/ament_cmake_symlink_install.cmake")
+  include("/root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/ament_cmake_symlink_install/ament_cmake_symlink_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -54,5 +54,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,1 +1,1 @@
-/home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/ament_cmake_environment_hooks/local_setup.zsh
+/root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/ament_cmake_environment_hooks/local_setup.zsh

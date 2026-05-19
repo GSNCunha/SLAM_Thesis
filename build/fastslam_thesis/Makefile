@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/gabriel/Desktop/SLAM_Thesis
+CMAKE_SOURCE_DIR = /root/SLAM_Thesis/Desktop/SLAM_Thesis
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
+CMAKE_BINARY_DIR = /root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -142,9 +142,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/CMakeFiles /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/CMakeFiles /root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /root/SLAM_Thesis/Desktop/SLAM_Thesis/build/fastslam_thesis/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
