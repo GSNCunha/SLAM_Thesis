@@ -2,34 +2,68 @@ import sys
 import subprocess
 import signal
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QFrame)
+                             QLabel, QLineEdit, QPushButton, QFrame, QScrollArea)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 
 # ==========================================
-# ⚙️ CONFIGURAÇÕES DA IHM
+# ⚙️ CONFIGURAÇÕES DA IHM E AMBIENTE ROS 2
 # ==========================================
 PI_USER = "burguer"
 CONTAINER = "slam_container_thesis"
-WORKSPACE = "~/SLAM_Thesis/Desktop/SLAM_Thesis"
 
-# Comando base atualizado com CycloneDDS
-DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
+# SEPARAÇÃO DE CAMINHOS (LOCAL VS RASPBERRY PI)
+PI_WORKSPACE = "~/SLAM_Thesis"                 # Caminho dentro do Docker na Raspberry Pi
+LOCAL_WORKSPACE = "~/Desktop/SLAM_Thesis"      # Caminho no seu PC (Ubuntu Local)
+
+# Comando base que roda remotamente na Raspberry Pi
+DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {PI_WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
 
 class IHMRobot(QWidget):
     def __init__(self):
         super().__init__()
+        
+        # Dicionário interno para armazenar o estado de todos os parâmetros
+        self.params = {
+            # Parâmetros Estáticos (Inicialização)
+            "particle_count": 300,
+            "map_resolution": 0.05,
+            "linear_update": 0.05,
+            "angular_update": 0.10,
+            "meas_z_hit": 0.95,
+            "meas_z_rand": 0.05,
+            "meas_sigma": 0.50,
+            "laser_max_range": 3.50,
+            
+            # Parâmetros Dinâmicos (Tempo Real)
+            "beam_skip": 5,
+            "kernel_size": 1,
+            "alpha1": 0.05,
+            "alpha2": 0.005,
+            "alpha3": 0.05,
+            "alpha4": 0.005
+        }
+        
         self.initUI()
 
     def initUI(self):
-        # Configurações da Janela
-        self.setWindowTitle("IHM de Operação - Burguer Bot")
-        self.setFixedSize(400, 760) # Altura ajustada para caber o novo botão
+        # Configurações da Janela Principal
+        self.setWindowTitle("Estação de Controlo - FastSLAM 1.0")
+        self.setFixedSize(450, 880)
         self.setStyleSheet("background-color: #1e272e; color: white;")
 
-        # Layout Principal (Vertical)
-        layout = QVBoxLayout()
-        layout.setSpacing(15)
+        # --- CONTAINER PRINCIPAL PARA A BARRA DE ROLAGEM ---
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("QScrollArea { border: none; } QScrollBar { background: #2f3640; }")
+
+        # --- CONTEÚDO DENTRO DO SCROLL ---
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
+        layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
 
         # Cabeçalho
@@ -39,149 +73,242 @@ class IHMRobot(QWidget):
         lbl_title.setStyleSheet("color: #d2dae2;")
         layout.addWidget(lbl_title)
 
-        # Campo de IP (Layout Horizontal)
+        # Campo de IP do Robô
         ip_layout = QHBoxLayout()
-        lbl_ip = QLabel("Endereço IP do Robô:")
+        lbl_ip = QLabel("Endereço IP:")
         lbl_ip.setFont(QFont("Arial", 10))
-        lbl_ip.setStyleSheet("color: #bdc3c7;")
-        
         self.entry_ip = QLineEdit("192.168.1.203")
-        self.entry_ip.setFont(QFont("Arial", 12))
-        self.entry_ip.setStyleSheet("""
-            QLineEdit {
-                background-color: #2f3640; 
-                border: 1px solid #485460; 
-                padding: 5px; 
-                border-radius: 4px;
-                color: white;
-            }
-        """)
-        
+        self.entry_ip.setStyleSheet("background-color: #2f3640; border: 1px solid #485460; padding: 5px; border-radius: 4px; color: white;")
         ip_layout.addWidget(lbl_ip)
         ip_layout.addWidget(self.entry_ip)
         layout.addLayout(ip_layout)
 
-        # Função auxiliar para criar botões padronizados
+        # Função universal para criar botões com design consistente
         def create_btn(text, color, callback):
             btn = QPushButton(text)
-            btn.setFont(QFont("Arial", 11, QFont.Bold))
+            btn.setFont(QFont("Arial", 10, QFont.Bold))
             btn.setCursor(QCursor(Qt.PointingHandCursor))
-            btn.setFixedHeight(50)
-            # Aplicando CSS para um design moderno
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: {color};
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                }}
-                QPushButton:hover {{
-                    background-color: {color};
-                    border: 2px solid white; /* Efeito de hover */
-                }}
-                QPushButton:pressed {{
-                    background-color: #2c3e50; /* Cor ao clicar */
-                }}
-            """)
+            btn.setFixedHeight(45)
+            btn.setStyleSheet(f"QPushButton {{ background-color: {color}; color: white; border: none; border-radius: 6px; }} QPushButton:hover {{ border: 2px solid white; }}")
             btn.clicked.connect(callback)
             return btn
 
-        # Adicionando os Botões
+        # ==========================================
+        # 🔧 OPERAÇÕES DO SISTEMA (DOCKER E SENSORES)
+        # ==========================================
         layout.addWidget(create_btn("0. Inicializar Sistema (Docker)", "#8e44ad", self.btn_start_docker))
-        
-        # NOVO BOTÃO: REINICIAR DOCKER
         layout.addWidget(create_btn("🔄 Reiniciar Docker (Reset)", "#34495e", self.btn_restart_docker))
-
-        layout.addWidget(create_btn("⚙️ Recompilar Código (Build)", "#7f8c8d", self.btn_build))
+        
+        # --- DIVISÃO DO BUILD (COMPILAÇÃO) ---
+        build_layout = QHBoxLayout()
+        build_layout.setSpacing(10)
+        build_layout.addWidget(create_btn("⚙️ Build (Pi)", "#7f8c8d", self.btn_build_remote))
+        build_layout.addWidget(create_btn("⚙️ Build (Local)", "#95a5a6", self.btn_build_local))
+        layout.addLayout(build_layout)
+        
+        # --- DIVISÃO DE LIMPEZA DO BUILD (CLEAN) ---
+        clean_layout = QHBoxLayout()
+        clean_layout.setSpacing(10)
+        clean_layout.addWidget(create_btn("🧹 Limpar (Pi)", "#e67e22", self.btn_clean_remote))
+        clean_layout.addWidget(create_btn("🧹 Limpar (Local)", "#d35400", self.btn_clean_local))
+        layout.addLayout(clean_layout)
+        
         layout.addWidget(create_btn("1. Iniciar Sensor (Lidar)", "#c0392b", self.btn_lidar))
         layout.addWidget(create_btn("2. Acoplar Tração (Motores)", "#d35400", self.btn_motores))
         layout.addWidget(create_btn("🛑 PARAR MOTORES", "#e74c3c", self.btn_parar_motores))
-        layout.addWidget(create_btn("3. Processamento SLAM", "#f39c12", self.btn_slam))
-        
-        # NOVO BOTÃO: GRAVAR ROSBAG
-        layout.addWidget(create_btn("⏺️ Gravar Dados (Rosbag)", "#16a085", self.btn_rosbag))
-        
-        layout.addWidget(create_btn("4. Iniciar Rota Autônoma", "#27ae60", self.btn_nav))
-        
-        # Linha Divisória
-        line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
-        line.setStyleSheet("background-color: #485460;")
-        layout.addWidget(line)
 
-        layout.addWidget(create_btn("💻 Abrir Visualizador 3D", "#2980b9", self.btn_rviz))
+        # ==========================================
+        # 🟢 PARÂMETROS ESTÁTICOS (PRÉ-BOOT)
+        # ==========================================
+        line1 = QFrame(); line1.setFrameShape(QFrame.HLine); line1.setStyleSheet("background-color: #485460; margin-top: 10px;")
+        layout.addWidget(line1)
 
-        self.setLayout(layout)
+        lbl_estaticos = QLabel("🟢 Configuração de Inicialização (Pré-Boot)")
+        lbl_estaticos.setFont(QFont("Arial", 11, QFont.Bold))
+        lbl_estaticos.setStyleSheet("color: #2ecc71;")
+        layout.addWidget(lbl_estaticos)
+
+        # Função universal para criar Steppers (+ / -)
+        def create_stepper(title, param_name, min_val, max_val, step, is_float, is_dynamic):
+            frame = QFrame()
+            frame.setStyleSheet("background-color: #2f3640; border-radius: 6px;")
+            h_layout = QHBoxLayout(frame)
+            h_layout.setContentsMargins(10, 5, 10, 5)
+            
+            lbl_title = QLabel(title)
+            lbl_title.setStyleSheet("color: white;")
+            
+            btn_minus = QPushButton("-")
+            btn_minus.setFixedSize(30, 30)
+            btn_minus.setStyleSheet("background-color: #e74c3c; border-radius: 4px; font-weight: bold;")
+            
+            init_val = self.params[param_name]
+            val_str = f"{init_val:.3f}" if is_float else str(init_val)
+            
+            lbl_val = QLabel(val_str)
+            lbl_val.setFont(QFont("Courier", 11, QFont.Bold))
+            lbl_val.setAlignment(Qt.AlignCenter)
+            lbl_val.setFixedSize(60, 30)
+            lbl_val.setStyleSheet("background-color: white; color: black; border-radius: 4px;")
+            
+            btn_plus = QPushButton("+")
+            btn_plus.setFixedSize(30, 30)
+            btn_plus.setStyleSheet("background-color: #2ecc71; border-radius: 4px; font-weight: bold;")
+            
+            def on_click(delta):
+                current = self.params[param_name]
+                new_val = current + delta
+                
+                if min_val <= new_val <= max_val:
+                    if is_float:
+                        new_val = round(new_val, 4)
+                        lbl_val.setText(f"{new_val:.3f}")
+                    else:
+                        lbl_val.setText(str(int(new_val)))
+                        
+                    self.params[param_name] = new_val
+                    
+                    if is_dynamic:
+                        cmd = f"ros2 param set /fastslam_node {param_name} {new_val}"
+                        self.run_remote_silent(cmd)
+                        
+            btn_minus.clicked.connect(lambda: on_click(-step))
+            btn_plus.clicked.connect(lambda: on_click(step))
+            
+            h_layout.addWidget(lbl_title)
+            h_layout.addStretch()
+            h_layout.addWidget(btn_minus)
+            h_layout.addWidget(lbl_val)
+            h_layout.addWidget(btn_plus)
+            layout.addWidget(frame)
+
+        # 1. Estrutura e Gatilhos
+        create_stepper("Número de Partículas", "particle_count", 50, 1000, 50, is_float=False, is_dynamic=False)
+        create_stepper("Resolução do Mapa (m/px)", "map_resolution", 0.01, 0.20, 0.01, is_float=True, is_dynamic=False)
+        create_stepper("Gatilho Linear (m)", "linear_update", 0.01, 0.50, 0.01, is_float=True, is_dynamic=False)
+        create_stepper("Gatilho Angular (rad)", "angular_update", 0.01, 0.50, 0.05, is_float=True, is_dynamic=False)
+        
+        # 2. Measurement Model
+        create_stepper("Z_hit (Prob. Acerto)", "meas_z_hit", 0.01, 1.0, 0.01, is_float=True, is_dynamic=False)
+        create_stepper("Z_rand (Ruído Uniforme)", "meas_z_rand", 0.01, 1.0, 0.01, is_float=True, is_dynamic=False)
+        create_stepper("Sigma Hit (Variância)", "meas_sigma", 0.05, 2.0, 0.05, is_float=True, is_dynamic=False)
+        create_stepper("Alcance Máx. Lidar (m)", "laser_max_range", 1.0, 12.0, 0.5, is_float=True, is_dynamic=False)
+
+        # --- DIVISÃO DO SLAM (LAYOUT HORIZONTAL) ---
+        slam_layout = QHBoxLayout()
+        slam_layout.setSpacing(10)
+        slam_layout.addWidget(create_btn("3a. SLAM (Pi)", "#f39c12", self.btn_slam_remote))
+        slam_layout.addWidget(create_btn("3b. SLAM (PC Local)", "#f1c40f", self.btn_slam_local))
+        layout.addLayout(slam_layout)
+
+        # ==========================================
+        # 🎛️ PARÂMETROS DINÂMICOS (LIVE TUNING)
+        # ==========================================
+        line2 = QFrame(); line2.setFrameShape(QFrame.HLine); line2.setStyleSheet("background-color: #485460; margin-top: 10px;")
+        layout.addWidget(line2)
+
+        lbl_dinamicos = QLabel("🎛️ Sintonia Fina (Ajuste em Tempo Real)")
+        lbl_dinamicos.setFont(QFont("Arial", 11, QFont.Bold))
+        lbl_dinamicos.setStyleSheet("color: #f1c40f;")
+        layout.addWidget(lbl_dinamicos)
+
+        # 1. Custo Computacional do Lidar
+        create_stepper("Beam Skip (Pulo de Feixes)", "beam_skip", 1, 15, 1, is_float=False, is_dynamic=True)
+        create_stepper("Kernel Size (Busca Likelihood)", "kernel_size", 0, 3, 1, is_float=False, is_dynamic=True)
+        
+        # 2. Odometria Alphas
+        create_stepper("Alpha 1 (Giro-Giro)", "alpha1", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
+        create_stepper("Alpha 2 (Giro-Reto)", "alpha2", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
+        create_stepper("Alpha 3 (Reto-Reto)", "alpha3", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
+        create_stepper("Alpha 4 (Reto-Giro)", "alpha4", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
+
+        # ==========================================
+        # 🚀 OPERAÇÕES FINAIS E VISUALIZAÇÃO
+        # ==========================================
+        line3 = QFrame(); line3.setFrameShape(QFrame.HLine); line3.setStyleSheet("background-color: #485460; margin-top: 10px;")
+        layout.addWidget(line3)
+
+        # --- DIVISÃO DO ROSBAG (LAYOUT HORIZONTAL) ---
+        rosbag_layout = QHBoxLayout()
+        rosbag_layout.setSpacing(10)
+        rosbag_layout.addWidget(create_btn("⏺️ Gravar Dados (Pi)", "#16a085", self.btn_rosbag_remote))
+        rosbag_layout.addWidget(create_btn("⏺️ Gravar Dados (PC)", "#1abc9c", self.btn_rosbag_local))
+        layout.addLayout(rosbag_layout)
+        
+        # --- DIVISÃO DA ROTA AUTÔNOMA (LAYOUT HORIZONTAL) ---
+        nav_layout = QHBoxLayout()
+        nav_layout.setSpacing(10)
+        nav_layout.addWidget(create_btn("4a. Rota (Pi)", "#27ae60", self.btn_nav_remote))
+        nav_layout.addWidget(create_btn("4b. Rota (PC Local)", "#2ecc71", self.btn_nav_local))
+        layout.addLayout(nav_layout)
+        
+        # Botões de Interface Gráfica Local (Gazebo e RViz)
+        gui_layout = QHBoxLayout()
+        gui_layout.setSpacing(10)
+        gui_layout.addWidget(create_btn("🌍 Simulação (Gazebo)", "#9b59b6", self.btn_gazebo))
+        gui_layout.addWidget(create_btn("💻 Visão 3D (RViz)", "#2980b9", self.btn_rviz))
+        layout.addLayout(gui_layout)
+
+        # Adiciona todo o conteúdo construído à Scroll Area
+        scroll_area.setWidget(content_widget)
+        main_layout.addWidget(scroll_area)
+
 
     # ==========================================
-    # 🚀 PROTOCOLOS DE COMUNICAÇÃO
+    # 📡 PROTOCOLOS DE COMUNICAÇÃO (SSH / DOCKER / LOCAL)
     # ==========================================
-    def run_remote(self, command_suffix, title="Terminal"):
+    def run_remote(self, command_suffix, title="Terminal Remoto"):
         current_ip = self.entry_ip.text().strip()
-        if not current_ip:
-            print("[Erro] O campo de IP está vazio!")
-            return
-
-        # 1. Comando base que vai rodar DENTRO do docker
+        if not current_ip: return
         linux_cmd = f"{DOCKER_BASE} {command_suffix}"
-        
-        # 2. Comando SSH: Usamos aspas duplas escapadas (\") para o bash interno do docker
         ssh_cmd = f"ssh -t {PI_USER}@{current_ip} \"docker exec -it {CONTAINER} bash -c \\\"{linux_cmd}\\\"\""
-        
-        # 3. Comando Terminal: Envolvemos o bash -c com aspas SIMPLES ('...') 
-        # Isso evita que as aspas duplas do comando SSH quebrem a string principal
         terminal_cmd = f"gnome-terminal --title=\"{title}\" -- bash -c '{ssh_cmd}; exec bash'"
-        
         subprocess.Popen(terminal_cmd, shell=True)
-        print(f"[IHM] Conectando subsistema: {title} no IP {current_ip}")
 
     def run_remote_silent(self, command_suffix):
-        """ Executa um comando SSH no docker sem abrir uma nova janela do terminal """
         current_ip = self.entry_ip.text().strip()
-        if not current_ip:
-            print("[Erro] O campo de IP está vazio!")
-            return
-
+        if not current_ip: return
         linux_cmd = f"{DOCKER_BASE} {command_suffix}"
         ssh_cmd = f"ssh {PI_USER}@{current_ip} \"docker exec {CONTAINER} bash -c \\\"{linux_cmd}\\\"\""
-        
         subprocess.Popen(ssh_cmd, shell=True)
-        print(f"[IHM] 🛑 Comando de parada enviado para o IP {current_ip}")
-
-    # ==========================================
-    # 🎛️ ROTINAS DE OPERAÇÃO
-    # ==========================================
-    def btn_start_docker(self):
-        current_ip = self.entry_ip.text().strip()
-        if not current_ip:
-            print("[Erro] O campo de IP está vazio!")
-            return
-        ssh_cmd = f"ssh -t {PI_USER}@{current_ip} 'docker start {CONTAINER}'"
-        terminal_cmd = f"gnome-terminal --title=\"Inicializando Sistema\" -- bash -c \"{ssh_cmd}; exec bash\""
-        subprocess.Popen(terminal_cmd, shell=True)
-        print(f"[IHM] Acordando o robô no IP {current_ip}")
-
-    def btn_restart_docker(self):
-        current_ip = self.entry_ip.text().strip()
-        if not current_ip:
-            print("[Erro] O campo de IP está vazio!")
-            return
-        ssh_cmd = f"ssh -t {PI_USER}@{current_ip} 'docker restart {CONTAINER}'"
-        terminal_cmd = f"gnome-terminal --title=\"Reiniciando Docker\" -- bash -c \"{ssh_cmd}; exec bash\""
-        subprocess.Popen(terminal_cmd, shell=True)
-        print(f"[IHM] Reiniciando o contêiner no IP {current_ip} (Limpando processos zumbis)")
-
-    def btn_build(self):
-        # Encadeia os builds: Primeiro compila o Lidar, depois o FastSLAM (raiz) e finaliza com source
-        build_cmd = "colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && colcon build --symlink-install && source install/setup.bash"
-        self.run_remote(build_cmd, "Compilador (Colcon Build)")
 
     def run_local(self, command, title="Terminal Local"):
-        """Abre um gnome-terminal local no seu PC Ubuntu"""
         terminal_cmd = f"gnome-terminal --title=\"{title}\" -- bash -c \"{command}; exec bash\""
         subprocess.Popen(terminal_cmd, shell=True)
-        print(f"[IHM] Iniciando rotina local: {title}")
+
+    # ==========================================
+    # 🎛️ ROTINAS DE OPERAÇÃO (CALLBACKS)
+    # ==========================================
+    def btn_start_docker(self):
+        self.run_local(f"ssh -t {PI_USER}@{self.entry_ip.text()} 'docker start {CONTAINER}'", "Inicializando Docker")
+
+    def btn_restart_docker(self):
+        self.run_local(f"ssh -t {PI_USER}@{self.entry_ip.text()} 'docker restart {CONTAINER}'", "Reiniciando Docker")
+
+    # --- CALLBACKS DE LIMPEZA E COMPILAÇÃO (CLEAN & BUILD) ---
+    def btn_clean_remote(self):
+        # Remove as pastas de compilação dentro do Docker na Pi
+        cmd = "rm -rf build/ install/ log/ && echo 'Build Remoto Limpo!'"
+        self.run_remote(cmd, "Limpando Build (Pi)")
+
+    def btn_clean_local(self):
+        # Utiliza sudo para garantir a remoção local de arquivos do Docker. Vai pedir senha no terminal Ubuntu.
+        cmd = f"cd {LOCAL_WORKSPACE} && sudo rm -rf build/ install/ log/ && echo 'Build Local Limpo!'"
+        self.run_local(cmd, "Limpando Build (PC Local)")
+
+    def btn_build_remote(self):
+        build_cmd = "colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && colcon build --symlink-install && source install/setup.bash"
+        self.run_remote(build_cmd, "Compilador Remoto (Pi)")
+
+    def btn_build_local(self):
+        cmd = (
+            f"source /opt/ros/humble/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && "
+            f"colcon build --symlink-install && "
+            f"source install/setup.bash"
+        )
+        self.run_local(cmd, "Compilador Local (PC Ubuntu)")
 
     def btn_lidar(self):
         self.run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Sensor Lidar")
@@ -190,26 +317,91 @@ class IHMRobot(QWidget):
         self.run_remote("python3 base_controller.py", "Tração e Odometria")
 
     def btn_parar_motores(self):
-        stop_cmd = "ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'"
-        self.run_remote_silent(stop_cmd)
+        self.run_remote_silent("ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'")
 
-    def btn_slam(self):
-        self.run_remote("ros2 launch fastslam_thesis fastslam.launch.py", "Mapeamento SLAM")
+    # --- FUNÇÃO AUXILIAR PARA PARÂMETROS DO SLAM ---
+    def _get_slam_args(self):
+        return (
+            f"particle_count:={int(self.params['particle_count'])} "
+            f"map_resolution:={self.params['map_resolution']} "
+            f"linear_update:={self.params['linear_update']} "
+            f"angular_update:={self.params['angular_update']} "
+            f"meas_z_hit:={self.params['meas_z_hit']} "
+            f"meas_z_rand:={self.params['meas_z_rand']} "
+            f"meas_sigma:={self.params['meas_sigma']} "
+            f"laser_max_range:={self.params['laser_max_range']}"
+        )
 
-    # NOVA FUNÇÃO: GRAVAR ROSBAG
-    def btn_rosbag(self):
-        self.run_remote("ros2 bag record /scan /tf /tf_static /odom", "Gravador Rosbag")
+    # --- CALLBACKS DO SLAM ---
+    def btn_slam_remote(self):
+        cmd = f"ros2 launch fastslam_thesis fastslam.launch.py {self._get_slam_args()}"
+        self.run_remote(cmd, "Mapeamento SLAM (Pi)")
 
-    def btn_nav(self):
-        self.run_remote("python3 simple_path.py", "Navegação Autônoma")
+    def btn_slam_local(self):
+        cmd = (
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"source install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"ros2 launch fastslam_thesis fastslam.launch.py {self._get_slam_args()}"
+        )
+        self.run_local(cmd, "Mapeamento SLAM (Local PC)")
+
+    # --- CALLBACKS DO ROSBAG ---
+    def btn_rosbag_remote(self):
+        self.run_remote("ros2 bag record /scan /tf /tf_static /odom", "Gravador Rosbag (Pi)")
+
+    def btn_rosbag_local(self):
+        cmd = (
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"source install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"ros2 bag record /scan /tf /tf_static /odom"
+        )
+        self.run_local(cmd, "Gravador Rosbag (Local PC)")
+
+    # --- CALLBACKS DA ROTA AUTÔNOMA ---
+    def btn_nav_remote(self):
+        self.run_remote("python3 simple_path.py", "Navegação Autônoma (Pi)")
+
+    def btn_nav_local(self):
+        cmd = (
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"source install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"python3 simple_path.py"
+        )
+        self.run_local(cmd, "Navegação Autônoma (Local PC)")
+
+    # --- CALLBACKS DE VISUALIZAÇÃO GRÁFICA ---
+    def btn_gazebo(self):
+        cmd = (
+            f"export TURTLEBOT3_MODEL=burger && "
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"source {LOCAL_WORKSPACE}/install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"ros2 launch custom_map.launch.py"
+        )
+        self.run_local(cmd, "Simulador Gazebo")
 
     def btn_rviz(self):
-        self.run_local("export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=30 && rviz2", "Visualizador 3D")
+        cmd = (
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"source {LOCAL_WORKSPACE}/install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"rviz2"
+        )
+        self.run_local(cmd, "Visualizador 3D")
 
 if __name__ == '__main__':
-    # Permitir fechamento via Ctrl+C no terminal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    
     app = QApplication(sys.argv)
     ihm = IHMRobot()
     ihm.show()
