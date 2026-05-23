@@ -1,8 +1,9 @@
 import sys
+import os
 import subprocess
 import signal
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QFrame, QScrollArea)
+                             QLabel, QLineEdit, QPushButton, QFrame, QScrollArea, QComboBox)
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 
@@ -83,6 +84,24 @@ class IHMRobot(QWidget):
         ip_layout.addWidget(self.entry_ip)
         layout.addLayout(ip_layout)
 
+        # ==========================================
+        # 🌟 ADIÇÃO: SELETOR DE MODO DE OPERAÇÃO
+        # ==========================================
+        mode_layout = QHBoxLayout()
+        lbl_mode = QLabel("🖥️ Ambiente:")
+        lbl_mode.setFont(QFont("Arial", 10, QFont.Bold))
+        lbl_mode.setStyleSheet("color: #f39c12;")
+        
+        self.combo_mode = QComboBox()
+        self.combo_mode.addItems(["Físico (Robô Real)", "Simulação (Gazebo)", "Gravação (Rosbag)"])
+        self.combo_mode.setStyleSheet("background-color: #2f3640; border: 1px solid #f39c12; padding: 5px; border-radius: 4px; color: white; font-weight: bold;")
+        self.combo_mode.setFixedHeight(35)
+        
+        mode_layout.addWidget(lbl_mode)
+        mode_layout.addWidget(self.combo_mode, stretch=1)
+        layout.addLayout(mode_layout)
+        # ==========================================
+
         # Função universal para criar botões com design consistente
         def create_btn(text, color, callback):
             btn = QPushButton(text)
@@ -128,7 +147,7 @@ class IHMRobot(QWidget):
         lbl_estaticos.setStyleSheet("color: #2ecc71;")
         layout.addWidget(lbl_estaticos)
 
-        # Função universal para criar Steppers (+ / -)
+        # Função universal para criar Steppers (+ / - e Campo de Texto Editável)
         def create_stepper(title, param_name, min_val, max_val, step, is_float, is_dynamic):
             frame = QFrame()
             frame.setStyleSheet("background-color: #2f3640; border-radius: 6px;")
@@ -145,45 +164,69 @@ class IHMRobot(QWidget):
             init_val = self.params[param_name]
             val_str = f"{init_val:.3f}" if is_float else str(init_val)
             
-            lbl_val = QLabel(val_str)
-            lbl_val.setFont(QFont("Courier", 11, QFont.Bold))
-            lbl_val.setAlignment(Qt.AlignCenter)
-            lbl_val.setFixedSize(60, 30)
-            lbl_val.setStyleSheet("background-color: white; color: black; border-radius: 4px;")
+            # Mudança: Usando QLineEdit em vez de QLabel para permitir digitação
+            entry_val = QLineEdit(val_str)
+            entry_val.setFont(QFont("Courier", 11, QFont.Bold))
+            entry_val.setAlignment(Qt.AlignCenter)
+            entry_val.setFixedSize(65, 30)
+            entry_val.setStyleSheet("background-color: white; color: black; border-radius: 4px; border: none;")
             
             btn_plus = QPushButton("+")
             btn_plus.setFixedSize(30, 30)
             btn_plus.setStyleSheet("background-color: #2ecc71; border-radius: 4px; font-weight: bold;")
             
+            # Função para validar e aplicar o novo valor
+            def update_value(new_val):
+                # Restringe entre o mínimo e o máximo
+                new_val = max(min_val, min(new_val, max_val))
+                
+                if is_float:
+                    new_val = round(new_val, 4)
+                    entry_val.setText(f"{new_val:.3f}")
+                else:
+                    new_val = int(new_val)
+                    entry_val.setText(str(new_val))
+                    
+                self.params[param_name] = new_val
+                
+                # Se for dinâmico, envia o comando ao ROS 2
+                if is_dynamic:
+                    cmd = f"ros2 param set /fastslam_node {param_name} {new_val}"
+                    self.run_remote_silent(cmd)
+
+            # Callback para os botões +/-
             def on_click(delta):
                 current = self.params[param_name]
-                new_val = current + delta
-                
-                if min_val <= new_val <= max_val:
+                update_value(current + delta)
+
+            # Callback para quando o usuário digita no campo e aperta Enter (ou clica fora)
+            def on_text_edit():
+                try:
+                    # Substitui vírgula por ponto para evitar erros em valores decimais
+                    text_val = entry_val.text().replace(',', '.')
+                    new_val = float(text_val) if is_float else int(float(text_val))
+                    update_value(new_val)
+                except ValueError:
+                    # Se digitar texto inválido (ex: letras), reverte para o valor atual
+                    current = self.params[param_name]
                     if is_float:
-                        new_val = round(new_val, 4)
-                        lbl_val.setText(f"{new_val:.3f}")
+                        entry_val.setText(f"{current:.3f}")
                     else:
-                        lbl_val.setText(str(int(new_val)))
-                        
-                    self.params[param_name] = new_val
-                    
-                    if is_dynamic:
-                        cmd = f"ros2 param set /fastslam_node {param_name} {new_val}"
-                        self.run_remote_silent(cmd)
+                        entry_val.setText(str(current))
                         
             btn_minus.clicked.connect(lambda: on_click(-step))
             btn_plus.clicked.connect(lambda: on_click(step))
+            entry_val.editingFinished.connect(on_text_edit)
             
             h_layout.addWidget(lbl_title)
             h_layout.addStretch()
             h_layout.addWidget(btn_minus)
-            h_layout.addWidget(lbl_val)
+            h_layout.addWidget(entry_val) # Agora adiciona o campo de texto
             h_layout.addWidget(btn_plus)
             layout.addWidget(frame)
 
         # 1. Estrutura e Gatilhos
-        create_stepper("Número de Partículas", "particle_count", 50, 1000, 50, is_float=False, is_dynamic=False)
+        create_stepper("Número de Partículas", "particle_count", 1, 1000, 50, is_float=False, is_dynamic=False)
         create_stepper("Resolução do Mapa (m/px)", "map_resolution", 0.01, 0.20, 0.01, is_float=True, is_dynamic=False)
         create_stepper("Gatilho Linear (m)", "linear_update", 0.01, 0.50, 0.01, is_float=True, is_dynamic=False)
         create_stepper("Gatilho Angular (rad)", "angular_update", 0.01, 0.50, 0.05, is_float=True, is_dynamic=False)
@@ -235,6 +278,20 @@ class IHMRobot(QWidget):
         rosbag_layout.addWidget(create_btn("⏺️ Gravar Dados (PC)", "#1abc9c", self.btn_rosbag_local))
         layout.addLayout(rosbag_layout)
         
+        # --- LEITOR DE ROSBAG (PLAY) ---
+        bag_play_layout = QHBoxLayout()
+        bag_play_layout.setSpacing(10)
+        
+        self.combo_bags = QComboBox()
+        self.combo_bags.setStyleSheet("background-color: #2f3640; border: 1px solid #485460; padding: 5px; border-radius: 4px; color: white; font-weight: bold;")
+        self.combo_bags.setFixedHeight(45)
+        self.update_bag_list()
+        
+        bag_play_layout.addWidget(self.combo_bags, stretch=3)
+        bag_play_layout.addWidget(create_btn("🔄", "#7f8c8d", self.update_bag_list), stretch=1)
+        bag_play_layout.addWidget(create_btn("▶️ Tocar Bag", "#2980b9", self.btn_play_bag_local), stretch=2)
+        layout.addLayout(bag_play_layout)
+
         # --- DIVISÃO DA ROTA AUTÔNOMA (LAYOUT HORIZONTAL) ---
         nav_layout = QHBoxLayout()
         nav_layout.setSpacing(10)
@@ -320,8 +377,21 @@ class IHMRobot(QWidget):
         self.run_remote_silent("ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'")
 
     # --- FUNÇÃO AUXILIAR PARA PARÂMETROS DO SLAM ---
+    # ==========================================
+    # 🌟 ADIÇÃO: LÓGICA DE CAPTURA DO MODO
+    # ==========================================
     def _get_slam_args(self):
+        # Lê a caixa de seleção e define a string que o ROS 2 entende
+        mode_text = self.combo_mode.currentText()
+        if "Gazebo" in mode_text:
+            r_mode = "gazebo"
+        elif "Rosbag" in mode_text:
+            r_mode = "rosbag"
+        else:
+            r_mode = "real"
+
         return (
+            f"robot_mode:={r_mode} "  # <-- Enviando a escolha para o Cérebro do Launch
             f"particle_count:={int(self.params['particle_count'])} "
             f"map_resolution:={self.params['map_resolution']} "
             f"linear_update:={self.params['linear_update']} "
@@ -363,6 +433,38 @@ class IHMRobot(QWidget):
         )
         self.run_local(cmd, "Gravador Rosbag (Local PC)")
 
+    # --- CALLBACKS DO LEITOR DE ROSBAG ---
+    def update_bag_list(self):
+        self.combo_bags.clear()
+        # O caminho usa o LOCAL_WORKSPACE definido no início do arquivo
+        bag_dir = os.path.expanduser(f"{LOCAL_WORKSPACE.replace('~', '~')}/ROSBAG")
+        
+        if os.path.exists(bag_dir):
+            # No ROS 2, as bags são pastas que contêm os arquivos .db3
+            bags = [f for f in os.listdir(bag_dir) if os.path.isdir(os.path.join(bag_dir, f))]
+            bags.sort(reverse=True) # Exibe as gravações mais recentes primeiro
+            if bags:
+                self.combo_bags.addItems(bags)
+            else:
+                self.combo_bags.addItem("Pasta ROSBAG vazia")
+        else:
+            self.combo_bags.addItem("Pasta ROSBAG não encontrada")
+
+    def btn_play_bag_local(self):
+        selected_bag = self.combo_bags.currentText()
+        if not selected_bag or selected_bag in ["Pasta ROSBAG vazia", "Pasta ROSBAG não encontrada"]:
+            return
+            
+        cmd = (
+            f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
+            f"source /opt/ros/humble/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"source install/setup.bash && "
+            f"export ROS_DOMAIN_ID=30 && "
+            f"ros2 bag play ROSBAG/{selected_bag} --clock" # <-- ALTERADO PARA INCLUIR --clock
+        )
+        self.run_local(cmd, f"Leitor Rosbag: {selected_bag}")
+
     # --- CALLBACKS DA ROTA AUTÔNOMA ---
     def btn_nav_remote(self):
         self.run_remote("python3 simple_path.py", "Navegação Autônoma (Pi)")
@@ -396,7 +498,7 @@ class IHMRobot(QWidget):
             f"source /opt/ros/humble/setup.bash && "
             f"source {LOCAL_WORKSPACE}/install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"rviz2"
+            f"ros2 run rviz2 rviz2 --ros-args -p use_sim_time:=True" # <-- ALTERADO PARA INCLUIR use_sim_time
         )
         self.run_local(cmd, "Visualizador 3D")
 

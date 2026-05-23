@@ -36,18 +36,71 @@ public:
         this->declare_parameter("angular_update", 0.1);    // Map is updated for every X rad traveled
         // =============================================================================
         //                          SET MOVEMENT AND SENSING PARAMENTERS
+        
+        // --- ADICIONADO: OFFSET FÍSICO DO SENSOR ---
+        this->declare_parameter("laser_offset_x", 0.0);
+        this->declare_parameter("laser_offset_yaw", 0.0);
+        laser_offset_x_ = this->get_parameter("laser_offset_x").as_double();
+        laser_offset_yaw_ = this->get_parameter("laser_offset_yaw").as_double();
+        RCLCPP_INFO(this->get_logger(), "Laser Offset: X=%.3fm, Yaw=%.3frad", laser_offset_x_, laser_offset_yaw_);
+
         // MOTION MODEL INDEXES:
         // 1 -> alpha1 : Rotational error from rotational motion (turning variance)
         // 2 -> alpha2 : Rotational error from translational motion (drift while driving straight)
         // 3 -> alpha3 : Translational error from translational motion (distance variance)
         // 4 -> alpha4 : Translational error from rotational motion (displacement while turning)
-        motion_model_ = std::make_unique<MotionModel>(0.05, 0.005, 0.05, 0.005); 
+        this->declare_parameter("alpha1", 0.5);
+        this->declare_parameter("alpha2", 0.5);
+        this->declare_parameter("alpha3", 0.05);
+        this->declare_parameter("alpha4", 0.005);
+        
+        motion_model_ = std::make_unique<MotionModel>(
+            this->get_parameter("alpha1").as_double(),
+            this->get_parameter("alpha2").as_double(),
+            this->get_parameter("alpha3").as_double(),
+            this->get_parameter("alpha4").as_double()
+        ); 
         // MEASUREMENT MODEL INDEXES:
         // 1 -> P(occupied) : Probability that a cell is occupied if the laser hits it (Black)
         // 2 -> P(free)     : Probability that a cell is occupied if the laser passes through (White)
         // 3 -> P(prior)    : Initial probability for unknown cells (Gray/Unexplored)
         // 4 -> Max Range   : Maximum effective range of the laser sensor in meters
-        measurement_model_ = std::make_unique<MeasurementModel>(0.95, 0.05, 0.5, 3.5);
+        this->declare_parameter("meas_z_hit", 0.95);
+        this->declare_parameter("meas_z_rand", 0.05);
+        this->declare_parameter("meas_sigma", 0.5);
+        this->declare_parameter("laser_max_range", 3.5);
+        this->declare_parameter("beam_skip", 5);
+        this->declare_parameter("kernel_size", 1);
+        
+        measurement_model_ = std::make_unique<MeasurementModel>(
+            this->get_parameter("meas_z_hit").as_double(),
+            this->get_parameter("meas_z_rand").as_double(),
+            this->get_parameter("meas_sigma").as_double(),
+            this->get_parameter("laser_max_range").as_double()
+        );
+
+        param_callback_handle_ = this->add_on_set_parameters_callback(
+            [this](const std::vector<rclcpp::Parameter> &parameters) {
+                rcl_interfaces::msg::SetParametersResult result;
+                result.successful = true;
+                
+                for (const auto &param : parameters) {
+                    if (param.get_name() == "beam_skip") {
+                        this->measurement_model_->setBeamSkip(param.as_int());
+                    } else if (param.get_name() == "kernel_size") {
+                        this->measurement_model_->setKernelSize(param.as_int());
+                    } else if (param.get_name() == "alpha1") {
+                        this->motion_model_->setAlpha1(param.as_double());
+                    } else if (param.get_name() == "alpha2") {
+                        this->motion_model_->setAlpha2(param.as_double());
+                    } else if (param.get_name() == "alpha3") {
+                        this->motion_model_->setAlpha3(param.as_double());
+                    } else if (param.get_name() == "alpha4") {
+                        this->motion_model_->setAlpha4(param.as_double());
+                    }
+                }
+                return result;
+            });
         // =============================================================================
 
         particle_count_ = this->get_parameter("particle_count").as_int();           // Get arguments
@@ -82,6 +135,8 @@ public:
 
 private:
 
+    rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_callback_handle_;
+
     std::vector<Particle> particles_;           // Vector of the typr Particle ( from particle.hpp) called particles_
     bool has_odom_ = false;                     // Auxiliary variable for knowing if there is a last odom state 
     StampedPose2D last_update_odom_;            // Struct from motion model for the last odom state(it contains time and pose)
@@ -90,6 +145,10 @@ private:
     int particle_count_;                        // Number of particles
     double update_dist_linear_;                 // Map is updated for every X m traveled
     double update_dist_angular_;                // Map is updated for every X rad traveled
+
+    // --- ADICIONADO: OFFSET FÍSICO DO SENSOR ---
+    double laser_offset_x_;                     // Deslocamento físico em X
+    double laser_offset_yaw_;                   // Giro físico no próprio eixo (Yaw)
 
     std::unique_ptr<MotionModel> motion_model_;               // Instanciation of the class motion model
     std::unique_ptr<MeasurementModel> measurement_model_;     // Instanciation of the class measurement model 
@@ -202,11 +261,17 @@ private:
             p.y = new_pose.y_;              // Get new particle pose
             p.theta = new_pose.theta_;      // Get new particle pose
 
+            // --- ADICIONADO: APLICAÇÃO DO OFFSET FÍSICO DO SENSOR ---
+            // Calcula a posição real do Lidar no espaço, baseada na posição da partícula
+            double laser_x = p.x + (laser_offset_x_ * cos(p.theta));
+            double laser_y = p.y + (laser_offset_x_ * sin(p.theta));
+            double laser_theta = p.theta + laser_offset_yaw_;
+
             double w = measurement_model_->computeWeight(   //Corection Step, using the measurement model, estimate the weight or likelihood of one particle being correct using the measurements, map and position change
                 filtered_ranges, 
-                p.x, 
-                p.y, 
-                p.theta, 
+                laser_x,        // <-- ADICIONADO: Passa o X do Lidar em vez de p.x
+                laser_y,        // <-- ADICIONADO: Passa o Y do Lidar em vez de p.y
+                laser_theta,    // <-- ADICIONADO: Passa o Ângulo do Lidar em vez de p.theta
                 p.map, 
                 current_angle_min,
                 current_increment  
@@ -221,12 +286,18 @@ private:
         resampleParticles();                    // Resampling Based on each paricle weight 
 
         for (auto& p : particles_) {            //  Update the map for each particle
+            
+            // --- ADICIONADO: APLICAÇÃO DO OFFSET FÍSICO DO SENSOR ---
+            double laser_x = p.x + (laser_offset_x_ * cos(p.theta));
+            double laser_y = p.y + (laser_offset_x_ * sin(p.theta));
+            double laser_theta = p.theta + laser_offset_yaw_;
+
             grid_mapper_->updateMap(
                 p.map, 
                 filtered_ranges, 
-                p.x, 
-                p.y, 
-                p.theta, 
+                laser_x,        // <-- ADICIONADO: Passa o X do Lidar
+                laser_y,        // <-- ADICIONADO: Passa o Y do Lidar
+                laser_theta,    // <-- ADICIONADO: Passa o Ângulo do Lidar
                 current_angle_min,  
                 current_increment   
             );

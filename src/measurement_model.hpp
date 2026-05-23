@@ -49,6 +49,9 @@ public:
                          double angle_increment  
                         );
 
+    void setBeamSkip(int skip) { beam_skip_ = skip; }
+    void setKernelSize(int size) { kernel_size_ = size; }
+
 private:
     double z_hit_;
     double z_rand_;

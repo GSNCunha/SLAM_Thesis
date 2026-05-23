@@ -37,6 +37,11 @@ public:
                                     const StampedPose2D& start_odom, 
                                     const StampedPose2D& end_odom);
 
+    void setAlpha1(double a) { alpha1_ = a; }
+    void setAlpha2(double a) { alpha2_ = a; }
+    void setAlpha3(double a) { alpha3_ = a; }
+    void setAlpha4(double a) { alpha4_ = a; }
+
 private:
     double alpha1_, alpha2_, alpha3_, alpha4_;
     std::mt19937 gen_; // Mersenne Twister Engine
