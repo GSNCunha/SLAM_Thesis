@@ -1,0 +1,84 @@
+===============================================================================
+MASTER CONFIGURATION GUIDE: USB PORTS, DOCKER, AND DEPENDENCIES (ROS 2 HUMBLE)
+===============================================================================
+
+This guide summarizes the definitive solution for the hardware conflict between 
+the LiDAR sensor and the Dynamixel motor controller on the Raspberry Pi, along 
+with the creation and tuning of the ideal Docker container for the ARM64 architecture.
+
+-------------------------------------------------------------------------------
+PHASE 1: HARDWARE ANCHORING (SOLVING THE CH340 TWIN CONFLICT)
+-------------------------------------------------------------------------------
+Because the LiDAR and the Motors use the exact same USB-to-Serial converter chip 
+(CH340), they share the same Vendor ID and Product ID (1a86:7523). The solution 
+was to lock their symlinks based on the PHYSICAL USB PORT (KERNELS) of the Raspberry Pi.
+
+1. Identifying the physical ports:
+   Command used to find the USB "hole" identifier:
+   udevadm info --name=/dev/ttyUSBX --attribute-walk | grep KERNELS | head -n 4
+
+   Final physical mapping:
+   - LiDAR   -> Physical Port "3-1" (mapped as /dev/ttyUSB0)
+   - Motors  -> Physical Port "1-1" (mapped as /dev/ttyUSB1)
+
+2. Creating the UDEV Rules (Symlinks and 0777 Permissions):
+
+   LiDAR File: /etc/udev/rules.d/99-lidar.rules
+   Content:
+   SUBSYSTEM=="tty", KERNELS=="3-1*", MODE="0777", SYMLINK+="lidar"
+
+   Motors File: /etc/udev/rules.d/99-motores.rules
+   Content:
+   SUBSYSTEM=="tty", KERNELS=="1-1*", MODE="0777", SYMLINK+="motores"
+
+3. Command to reload and apply the rules to the system:
+   sudo udevadm control --reload-rules && sudo udevadm trigger
+
+   *Golden Note: The cables now have dedicated ports and must not be swapped.*
+
+-------------------------------------------------------------------------------
+PHASE 2: DOCKER CONTAINER SETUP (THE IMMORTAL BUBBLE)
+-------------------------------------------------------------------------------
+The old image (osrf/ros:humble-desktop) caused an architecture mismatch 
+(exec format error) on the Raspberry Pi (ARM64). We replaced it with the native 
+and lightweight image (ros:humble) and applied the infinite "tail -f /dev/null" 
+command to keep it running in the background.
+
+1. Stop and remove the old/crashed container:
+   docker stop slam_container_thesis && docker rm slam_container_thesis
+
+2. Create the new container with hardware mapping (--device) and volume:
+   docker run -d \
+     --name slam_container_thesis \
+     --net=host \
+     --device=/dev/lidar \
+     --device=/dev/motores \
+     -v ~/Desktop/SLAM_Thesis:/root/SLAM_Thesis \
+     ros:humble \
+     tail -f /dev/null
+
+-------------------------------------------------------------------------------
+PHASE 3: POST-INSTALL DEPENDENCIES (TAILORING ROS 2)
+-------------------------------------------------------------------------------
+Since the "ros:humble" image is bare-bones to save RAM on the robot, we need 
+to manually inject the build tools, communication protocols, and motor libraries.
+
+1. Install the Cyclone DDS communication protocol and Colcon extensions:
+   (Required for the HMI to communicate with the container via ROS_DOMAIN_ID=30)
+   docker exec -it slam_container_thesis bash -c "apt-get update && apt-get install -y ros-humble-rmw-cyclonedds-cpp python3-colcon-common-extensions"
+
+2. Install Pip and the Dynamixel SDK (Python):
+   (Required for the base_controller.py script to access the motor libraries)
+   docker exec -it slam_container_thesis bash -c "apt-get install -y python3-pip && pip3 install dynamixel-sdk"
+
+-------------------------------------------------------------------------------
+FINAL SUCCESS VERIFICATION
+-------------------------------------------------------------------------------
+To ensure Docker is perfectly recognizing the hardware with full permissions:
+docker exec -it slam_container_thesis ls -la /dev/lidar
+docker exec -it slam_container_thesis ls -la /dev/motores
+
+Expected output (crwxrwxrwx ...):
+/dev/lidar -> Active character device with full permissions.
+/dev/motores -> Active character device with full permissions.
+===============================================================================
