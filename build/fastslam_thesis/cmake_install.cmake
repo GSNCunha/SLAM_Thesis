@@ -1,4 +1,4 @@
-# Install script for directory: /home/gabriel/Desktop/SLAM_Thesis
+# Install script for directory: /home/gabriel/Desktop/SLAM_Thesis/src/fastslam_thesis
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

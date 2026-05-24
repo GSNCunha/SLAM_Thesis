@@ -17,8 +17,8 @@ CONTAINER = "slam_container_thesis"
 PI_WORKSPACE = "~/SLAM_Thesis"                 # Caminho dentro do Docker na Raspberry Pi
 LOCAL_WORKSPACE = "~/Desktop/SLAM_Thesis"      # Caminho no seu PC (Ubuntu Local)
 
-# Comando base que roda remotamente na Raspberry Pi
-DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {PI_WORKSPACE} && source install/setup.bash && export ROS_DOMAIN_ID=30 && "
+# Comando base que roda remotamente na Raspberry Pi (COM PROTEÇÃO || true)
+DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {PI_WORKSPACE} && (source install/setup.bash || true) && export ROS_DOMAIN_ID=30 && "
 
 class IHMRobot(QWidget):
     def __init__(self):
@@ -271,12 +271,26 @@ class IHMRobot(QWidget):
         line3 = QFrame(); line3.setFrameShape(QFrame.HLine); line3.setStyleSheet("background-color: #485460; margin-top: 10px;")
         layout.addWidget(line3)
 
+        # --- 🌟 NOVO: CAIXA DE TEXTO PARA NOME DO ROSBAG ---
+        bag_name_layout = QHBoxLayout()
+        lbl_bag_name = QLabel("Nome do Rosbag:")
+        lbl_bag_name.setFont(QFont("Arial", 10, QFont.Bold))
+        lbl_bag_name.setStyleSheet("color: #1abc9c;")
+        self.entry_bag_name = QLineEdit("minha_gravacao")
+        self.entry_bag_name.setStyleSheet("background-color: #2f3640; border: 1px solid #1abc9c; padding: 5px; border-radius: 4px; color: white;")
+        bag_name_layout.addWidget(lbl_bag_name)
+        bag_name_layout.addWidget(self.entry_bag_name)
+        layout.addLayout(bag_name_layout)
+
         # --- DIVISÃO DO ROSBAG (LAYOUT HORIZONTAL) ---
         rosbag_layout = QHBoxLayout()
         rosbag_layout.setSpacing(10)
         rosbag_layout.addWidget(create_btn("⏺️ Gravar Dados (Pi)", "#16a085", self.btn_rosbag_remote))
         rosbag_layout.addWidget(create_btn("⏺️ Gravar Dados (PC)", "#1abc9c", self.btn_rosbag_local))
         layout.addLayout(rosbag_layout)
+        
+        # --- 🌟 NOVO: BOTÃO PARA SINCRONIZAR ROSBAGS (REMOTO -> LOCAL) ---
+        layout.addWidget(create_btn("🔄 Sincronizar Rosbags (Pi ➔ PC)", "#2980b9", self.btn_sync_bags))
         
         # --- LEITOR DE ROSBAG (PLAY) ---
         bag_play_layout = QHBoxLayout()
@@ -354,14 +368,18 @@ class IHMRobot(QWidget):
         self.run_local(cmd, "Limpando Build (PC Local)")
 
     def btn_build_remote(self):
-        build_cmd = "colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && colcon build --symlink-install && source install/setup.bash"
+        # Manda compilar TUDO o que estiver na pasta src, um pacote de cada vez para poupar RAM
+        build_cmd = (
+            "colcon build --symlink-install --executor sequential && "
+            "source install/setup.bash"
+        )
         self.run_remote(build_cmd, "Compilador Remoto (Pi)")
 
     def btn_build_local(self):
+        # Manda compilar TUDO no PC Local
         cmd = (
             f"source /opt/ros/humble/setup.bash && "
             f"cd {LOCAL_WORKSPACE} && "
-            f"colcon build --base-paths src/ldlidar_stl_ros2 --symlink-install && "
             f"colcon build --symlink-install && "
             f"source install/setup.bash"
         )
@@ -371,7 +389,8 @@ class IHMRobot(QWidget):
         self.run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Sensor Lidar")
 
     def btn_motores(self):
-        self.run_remote("python3 base_controller.py", "Tração e Odometria")
+        # Atualizado: Aponta para a pasta utils
+        self.run_remote("python3 src/utils/scripts/base_controller.py", "Tração e Odometria")
 
     def btn_parar_motores(self):
         self.run_remote_silent("ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist '{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}'")
@@ -418,20 +437,38 @@ class IHMRobot(QWidget):
         )
         self.run_local(cmd, "Mapeamento SLAM (Local PC)")
 
-    # --- CALLBACKS DO ROSBAG ---
+    # --- CALLBACKS DO ROSBAG ATUALIZADOS COM NOME DINÂMICO E PASTA CORRETA ---
     def btn_rosbag_remote(self):
-        self.run_remote("ros2 bag record /scan /tf /tf_static /odom", "Gravador Rosbag (Pi)")
+        name = self.entry_bag_name.text().strip()
+        if not name: name = "rosbag_pi"
+        # Garante a criação da pasta ROSBAG e salva o arquivo lá dentro
+        cmd = f"mkdir -p ROSBAG && ros2 bag record -o ROSBAG/{name} /scan /tf /tf_static /odom"
+        self.run_remote(cmd, f"Gravador Rosbag (Pi): {name}")
 
     def btn_rosbag_local(self):
+        name = self.entry_bag_name.text().strip()
+        if not name: name = "rosbag_local"
         cmd = (
             f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
             f"source /opt/ros/humble/setup.bash && "
             f"cd {LOCAL_WORKSPACE} && "
             f"source install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"ros2 bag record /scan /tf /tf_static /odom"
+            f"mkdir -p ROSBAG && "
+            f"ros2 bag record -o ROSBAG/{name} /scan /tf /tf_static /odom"
         )
-        self.run_local(cmd, "Gravador Rosbag (Local PC)")
+        self.run_local(cmd, f"Gravador Rosbag (Local PC): {name}")
+
+    # --- 🌟 NOVO CALLBACK: SINCRONIZAÇÃO VIA RSYNC (PULA REPETIDOS) ---
+    def btn_sync_bags(self):
+        current_ip = self.entry_ip.text().strip()
+        if not current_ip: return
+        # Garante a pasta local e executa o rsync trazendo apenas novos arquivos de forma otimizada
+        cmd = (
+            f"mkdir -p {LOCAL_WORKSPACE}/ROSBAG && "
+            f"rsync -avz --progress {PI_USER}@{current_ip}:{PI_WORKSPACE}/ROSBAG/ {LOCAL_WORKSPACE}/ROSBAG/"
+        )
+        self.run_local(cmd, "Sincronizando Banco de Dados Rosbags (Pi ➔ PC Local)")
 
     # --- CALLBACKS DO LEITOR DE ROSBAG ---
     def update_bag_list(self):
@@ -467,28 +504,32 @@ class IHMRobot(QWidget):
 
     # --- CALLBACKS DA ROTA AUTÔNOMA ---
     def btn_nav_remote(self):
-        self.run_remote("python3 simple_path.py", "Navegação Autônoma (Pi)")
+        # Atualizado: Aponta para a pasta utils
+        self.run_remote("python3 src/utils/scripts/simple_path.py", "Navegação Autônoma (Pi)")
 
     def btn_nav_local(self):
+        # Atualizado: Aponta para a pasta utils
         cmd = (
             f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
             f"source /opt/ros/humble/setup.bash && "
             f"cd {LOCAL_WORKSPACE} && "
             f"source install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"python3 simple_path.py"
+            f"python3 src/utils/scripts/simple_path.py"
         )
         self.run_local(cmd, "Navegação Autônoma (Local PC)")
 
     # --- CALLBACKS DE VISUALIZAÇÃO GRÁFICA ---
     def btn_gazebo(self):
+        # A MÁGICA ESTÁ AQUI: "./src/utils/..." força o ROS 2 a ler como um arquivo e não como um pacote!
         cmd = (
             f"export TURTLEBOT3_MODEL=burger && "
             f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
             f"source /opt/ros/humble/setup.bash && "
-            f"source {LOCAL_WORKSPACE}/install/setup.bash && "
+            f"cd {LOCAL_WORKSPACE} && "
+            f"source install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"ros2 launch custom_map.launch.py"
+            f"ros2 launch ./src/utils/launch/custom_map.launch.py"
         )
         self.run_local(cmd, "Simulador Gazebo")
 

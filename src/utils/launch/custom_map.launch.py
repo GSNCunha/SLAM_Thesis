@@ -10,7 +10,8 @@ def generate_launch_description():
     tb3_gazebo_dir = os.path.join(get_package_share_directory('turtlebot3_gazebo'), 'launch')
 
     # THE TRICK: Point to your map in the current working directory
-    world_path = os.path.join(os.getcwd(), 'gazebo_smaller_map.world')
+    current_dir = os.getcwd()
+    world_path = os.path.join(current_dir, 'src', 'utils', 'worlds', 'gazebo_smaller_map.world')
 
     # 1. Start the Gazebo server with YOUR map
     gzserver_cmd = IncludeLaunchDescription(

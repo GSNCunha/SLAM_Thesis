@@ -1,5 +1,5 @@
 # CMake generated Testfile for 
-# Source directory: /home/gabriel/Desktop/SLAM_Thesis
+# Source directory: /home/gabriel/Desktop/SLAM_Thesis/src/fastslam_thesis
 # Build directory: /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
 # 
 # This file includes the relevant testing commands required for 

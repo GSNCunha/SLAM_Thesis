@@ -57,7 +57,7 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/gabriel/Desktop/SLAM_Thesis
+CMAKE_SOURCE_DIR = /home/gabriel/Desktop/SLAM_Thesis/src/fastslam_thesis
 
 # The top-level build directory on which CMake was run.
 CMAKE_BINARY_DIR = /home/gabriel/Desktop/SLAM_Thesis/build/fastslam_thesis
