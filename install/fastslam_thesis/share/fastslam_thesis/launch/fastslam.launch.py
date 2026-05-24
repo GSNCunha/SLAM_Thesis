@@ -1,1 +1,0 @@
-/home/gabriel/Desktop/SLAM_Thesis/src/fastslam_thesis/launch/fastslam.launch.py
