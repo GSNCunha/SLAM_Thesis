@@ -3,8 +3,19 @@ install/
 build/
 log/
 
+# --- Bancos de Dados / Gravações ---
+ROSBAG/
+*.db3
+*.mcap
+
 # --- Python ---
 __pycache__/
+*.py[cod]
+*$py.class
 
 # --- VS Code / IDEs ---
-.vscode/browse.vc.db
+.vscode/
+
+# --- OS Generated Files ---
+.DS_Store
+Thumbs.db

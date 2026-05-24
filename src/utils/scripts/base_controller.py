@@ -5,7 +5,6 @@ from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
 from dynamixel_sdk import *
 import math
-import glob  # <-- NOVO: Biblioteca para buscar portas no Linux
 
 # --- HARDWARE CONFIGURATIONS ---
 BAUDRATE = 57600
@@ -43,11 +42,11 @@ class BaseController(Node):
         # Handlers base
         self.ph = PacketHandler(PROTOCOL_VERSION)
         
-        # --- AUTO-DISCOVERY DOS MOTORES ---
+        # --- CONEXÃO DIRETA AOS MOTORES ---
         self.port = self.find_dynamixel_port()
 
         if self.port is None:
-            self.get_logger().error('❌ ERRO FATAL: Nenhum motor Dynamixel foi encontrado em nenhuma porta USB!')
+            self.get_logger().error('❌ ERRO FATAL: Falha ao conectar na porta /dev/motores!')
             return
 
         self.setup_motors()
@@ -56,32 +55,25 @@ class BaseController(Node):
         self.timer = self.create_timer(0.2, self.update_odometry)
 
     def find_dynamixel_port(self):
-        """Busca automaticamente qual porta USB tem os motores Dynamixel"""
-        # Lista todas as portas USB do Linux (ttyUSB0, ttyUSB1, etc)
-        available_ports = glob.glob('/dev/ttyUSB*')
-        
-        if not available_ports:
-            self.get_logger().error("Nenhuma porta /dev/ttyUSB* detectada no sistema.")
-            return None
-            
-        self.get_logger().info(f"🔍 Buscando motores nas portas: {available_ports}")
+        """Conecta diretamente à porta fixada pela regra UDEV"""
+        port_name = '/dev/motores'
+        self.get_logger().info(f"🔍 Conectando aos motores na porta fixa: {port_name}")
 
-        for port_name in available_ports:
-            test_port = PortHandler(port_name)
+        test_port = PortHandler(port_name)
+        
+        if test_port.openPort() and test_port.setBaudRate(BAUDRATE):
+            # Tenta dar um "Ping" no motor Esquerdo (ID 4) para confirmar que estão vivos
+            _, comm_result, _ = self.ph.ping(test_port, DXL_ID_L)
             
-            if test_port.openPort() and test_port.setBaudRate(BAUDRATE):
-                # Tenta dar um "Ping" no motor Esquerdo (ID 4)
-                _, comm_result, _ = self.ph.ping(test_port, DXL_ID_L)
-                
-                if comm_result == COMM_SUCCESS:
-                    self.get_logger().info(f"✅ AUTO-DISCOVERY: Dynamixel encontrado em {port_name}!")
-                    return test_port # Retorna a porta já aberta e configurada
-                else:
-                    # Se abriu a porta mas não achou o motor, fecha para não travar outro sensor (ex: Lidar)
-                    test_port.closePort()
+            if comm_result == COMM_SUCCESS:
+                self.get_logger().info(f"✅ Dynamixel conectado com sucesso em {port_name}!")
+                return test_port 
             else:
-                self.get_logger().warn(f"⚠️ Não foi possível testar a porta {port_name}.")
-                
+                test_port.closePort()
+                self.get_logger().error(f"❌ Porta aberta, mas falha de comunicação (Ping ID {DXL_ID_L}).")
+        else:
+            self.get_logger().warn(f"⚠️ Não foi possível abrir a porta {port_name}.")
+            
         return None
 
     def setup_motors(self):
@@ -127,7 +119,7 @@ class BaseController(Node):
             t = TransformStamped()
             t.header.stamp = now.to_msg()
             t.header.frame_id = 'odom'
-            t.child_frame_id = 'base_footprint'
+            t.child_frame_id = 'base_link'
             t.transform.translation.x = self.x
             t.transform.translation.y = self.y
             t.transform.rotation.z = math.sin(self.th / 2.0)
@@ -137,7 +129,7 @@ class BaseController(Node):
             # 5. Publish Odometry Message
             odom = Odometry()
             odom.header = t.header
-            odom.child_frame_id = 'base_footprint'
+            odom.child_frame_id = 'base_link'
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.orientation = t.transform.rotation

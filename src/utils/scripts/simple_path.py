@@ -48,9 +48,6 @@ class SequenceNavNode(Node):
         self.add_left(0.25)  
         self.add_straight(500) 
         self.add_left(0.25) 
-        self.add_left(0.25) 
-        self.add_left(0.25) 
-         
         
         # =====================================================================
 
