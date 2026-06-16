@@ -8,7 +8,7 @@ The primary objective of this project is to provide a foundational, open-source 
 
 The algorithm was validated both in a Gazebo simulation and on a physical DIY TurtleBot3 Burger platform. The custom structural modifications, including the sensor leveling bed and wheel hubs, were manufactured using 3D printing.
 
-![Fully Assembled DIY TurtleBot3](README_images/Entire_robot.jpg)
+![Fully Assembled DIY TurtleBot3](README_images/Entire_robot.png)
 
 Detailed instructions on how this physical robot was constructed, including hardware selection, electrical routing, and electronic integration, are fully documented in the **`TCC_SLAM.pdf`** file included in this repository. This allows anyone to easily replicate and build the exact same DIY robot.
 
