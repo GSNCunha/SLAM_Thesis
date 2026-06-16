@@ -32,7 +32,7 @@ The FastSLAM algorithm was tested in both a virtual environment and a real-world
 ![Gazebo Simulation Run](README_images/simulation%20run.png)
 
 **Physical Robot Run:**
-![Physical Robot Run](README_images/real_run.jpg)
+![Physical Robot Run](README_images/real_run.png)
 
 **Quantitative Evaluation:**
 By superimposing the generated occupancy grids over the ground truth CAD floor plan, we can directly measure the structural accuracy of the FastSLAM implementation.
