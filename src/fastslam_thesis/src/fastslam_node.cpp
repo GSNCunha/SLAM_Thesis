@@ -1,3 +1,15 @@
+/*
+ * =============================================================================
+ * FASTSLAM CORE EXECUTION NODE
+ * This file serves as the central orchestrator for the FastSLAM algorithm in ROS 2.
+ * It manages the particle cloud, synchronizes the simulated or physical sensor inputs 
+ * (/odom and /scan), and executes the recursive Bayesian filter steps: Prediction, 
+ * Correction, and Mapping. Finally, it handles the publication of the Occupancy Grid 
+ * and the continuous TF2 spatial transforms to correct odometry drift.
+ * [See Section 4.3.1: The Core SLAM Node]
+ * =============================================================================
+ */
+
 #include <rclcpp/rclcpp.hpp>                            //ROS2 main library
 #include <sensor_msgs/msg/laser_scan.hpp>               //ROS2 library for reading the laser scan
 #include <nav_msgs/msg/odometry.hpp>                    //ROS2 library for reading the odometry
@@ -28,6 +40,10 @@ public:
     FastSlamNode() : Node("fastslam_node") {
         // =============================================================================
         //                           SET FASTSLAM PARAMETERS
+        // Configures the baseline values for the Particle Filter distribution and the 
+        // logical boundaries of the Occupancy Grid Map.
+        // [See Section 2.4.1: Particle Filters (Monte Carlo Localization - MCL)]
+        // [See Section 2.5.1: Occupancy Grid Maps]
         this->declare_parameter("particle_count", 300);     // Number of particles
         this->declare_parameter("map_resolution", 0.05);    // Map pixel size in m
         this->declare_parameter("map_width", 400);         // Map width
@@ -37,7 +53,7 @@ public:
         // =============================================================================
         //                          SET MOVEMENT AND SENSING PARAMENTERS
         
-        // --- ADICIONADO: OFFSET FÍSICO DO SENSOR ---
+        // --- ADDED: PHYSICAL SENSOR OFFSET ---
         this->declare_parameter("laser_offset_x", 0.0);
         this->declare_parameter("laser_offset_yaw", 0.0);
         laser_offset_x_ = this->get_parameter("laser_offset_x").as_double();
@@ -45,6 +61,9 @@ public:
         RCLCPP_INFO(this->get_logger(), "Laser Offset: X=%.3fm, Yaw=%.3frad", laser_offset_x_, laser_offset_yaw_);
 
         // MOTION MODEL INDEXES:
+        // These alpha parameters shape the expected uncertainty cloud (variance) of the robot's 
+        // predicted poses. They are crucial to accommodate wheel slippage and real-world drift.
+        // [See Section 2.1.2: Motion Model and Odometry]
         // 1 -> alpha1 : Rotational error from rotational motion (turning variance)
         // 2 -> alpha2 : Rotational error from translational motion (drift while driving straight)
         // 3 -> alpha3 : Translational error from translational motion (distance variance)
@@ -60,7 +79,11 @@ public:
             this->get_parameter("alpha3").as_double(),
             this->get_parameter("alpha4").as_double()
         ); 
+
         // MEASUREMENT MODEL INDEXES:
+        // Represents the composite probability distribution components of the Likelihood Field Model.
+        // It weights measurement noise (z_hit) against unexplained random noise (z_rand).
+        // [See Section 2.2.2: Measurement Model: Likelihood field model]
         // 1 -> P(occupied) : Probability that a cell is occupied if the laser hits it (Black)
         // 2 -> P(free)     : Probability that a cell is occupied if the laser passes through (White)
         // 3 -> P(prior)    : Initial probability for unknown cells (Gray/Unexplored)
@@ -119,13 +142,13 @@ public:
         odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(             //odom_sub_is receiving the information the subscription in the "/odom" topic, this subscription passes as argument to odomCallback the message received
             "/odom", qos, std::bind(&FastSlamNode::odomCallback, this, _1));
 
-        // FIX 1: Configuração de QoS correta para o RViz aceitar o mapa!
+        // FIX 1: Correct QoS configuration for RViz to accept the map!
         rclcpp::QoS map_qos(1);
         map_qos.reliable();
         map_qos.transient_local();
         map_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", map_qos);
                 
-        // FIX 2: O Assassino do Segfault! Criando o publicador das partículas
+        // FIX 2: The Segfault Killer! Creating the particles publisher
         particles_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("/particles", 10);
 
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);                   //create an object to handle for handling rotation math (Quaternions)
@@ -146,9 +169,9 @@ private:
     double update_dist_linear_;                 // Map is updated for every X m traveled
     double update_dist_angular_;                // Map is updated for every X rad traveled
 
-    // --- ADICIONADO: OFFSET FÍSICO DO SENSOR ---
-    double laser_offset_x_;                     // Deslocamento físico em X
-    double laser_offset_yaw_;                   // Giro físico no próprio eixo (Yaw)
+    // --- ADDED: PHYSICAL SENSOR OFFSET ---
+    double laser_offset_x_;                     // Physical displacement in X
+    double laser_offset_yaw_;                   // Physical rotation on its own axis (Yaw)
 
     std::unique_ptr<MotionModel> motion_model_;               // Instanciation of the class motion model
     std::unique_ptr<MeasurementModel> measurement_model_;     // Instanciation of the class measurement model 
@@ -162,6 +185,12 @@ private:
     
     std::mutex data_mutex_;          // for managing access of the particle vector between the odomCallback and the scanCallback
 
+    // =============================================================================
+    // INITIALIZE PARTICLES
+    // Allocates the memory for the required number of particles. Each particle 
+    // receives an empty log-odds occupancy grid array representing its independent map.
+    // [See Section 2.5.3: SLAM Approaches]
+    // =============================================================================
     void initParticles() {
         particles_.resize(particle_count_);                                                             // resize vector with declared particle count 
         
@@ -187,6 +216,12 @@ private:
         }
     }
 
+    // =============================================================================
+    // ODOMETRY CALLBACK
+    // Retrieves the dynamic kinematic updates (control variable u_t). Used later in 
+    // the prediction step to estimate how far the robot moved.
+    // [See Section 4.3.1: The Core SLAM Node]
+    // =============================================================================
     void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {       // "/odom" topic callback(everytime something is published in the topic, this code runs)
         std::lock_guard<std::mutex> lock(data_mutex_);                      // Locking the access of particle for this code to use 
         
@@ -207,6 +242,15 @@ private:
         }
     }
 
+    // =============================================================================
+    // LIDAR SCAN CALLBACK (MAIN SLAM PIPELINE)
+    // Synchronizes the /scan data (z_t) and triggers the recursive Bayes filter loop:
+    // 1. Prediction (via MotionModel)
+    // 2. Correction (via MeasurementModel)
+    // 3. Mapping (via GridMapper)
+    // 4. Resampling 
+    // [See Section 2.5.3: SLAM Approaches]
+    // =============================================================================
     void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) { // "/odom" topic callback(everytime something is published in the topic, this code runs)
         if (!has_odom_) return; //for the correction step, the measurement model needs at least one odom information first
 
@@ -220,7 +264,7 @@ private:
         double dist_sq = dx*dx + dy*dy;                                                // total linear pose change
 
         if (dist_sq < (update_dist_linear_*update_dist_linear_) && dth < update_dist_angular_) {        
-            // FIX: Mantém a Árvore TF e o Mapa vivos no RViz mesmo com o robô parado!
+            // FIX 1: Maintains the TF Tree and Map alive in RViz even with the robot stopped!
             publishResults(msg->header.stamp); 
             return;
         }
@@ -261,17 +305,17 @@ private:
             p.y = new_pose.y_;              // Get new particle pose
             p.theta = new_pose.theta_;      // Get new particle pose
 
-            // --- ADICIONADO: APLICAÇÃO DO OFFSET FÍSICO DO SENSOR ---
-            // Calcula a posição real do Lidar no espaço, baseada na posição da partícula
+            // --- ADDED: APPLICATION OF PHYSICAL SENSOR OFFSET ---
+            // Calculates the real Lidar position in space, based on the particle pose
             double laser_x = p.x + (laser_offset_x_ * cos(p.theta));
             double laser_y = p.y + (laser_offset_x_ * sin(p.theta));
             double laser_theta = p.theta + laser_offset_yaw_;
 
             double w = measurement_model_->computeWeight(   //Corection Step, using the measurement model, estimate the weight or likelihood of one particle being correct using the measurements, map and position change
                 filtered_ranges, 
-                laser_x,        // <-- ADICIONADO: Passa o X do Lidar em vez de p.x
-                laser_y,        // <-- ADICIONADO: Passa o Y do Lidar em vez de p.y
-                laser_theta,    // <-- ADICIONADO: Passa o Ângulo do Lidar em vez de p.theta
+                laser_x,        // <-- ADDED: Passes Lidar X instead of p.x
+                laser_y,        // <-- ADDED: Passes Lidar Y instead of p.y
+                laser_theta,    // <-- ADDED: Passes Lidar Angle instead of p.theta
                 p.map, 
                 current_angle_min,
                 current_increment  
@@ -287,7 +331,7 @@ private:
 
         for (auto& p : particles_) {            //  Update the map for each particle
             
-            // --- ADICIONADO: APLICAÇÃO DO OFFSET FÍSICO DO SENSOR ---
+            // --- ADDED: APPLICATION OF PHYSICAL SENSOR OFFSET ---
             double laser_x = p.x + (laser_offset_x_ * cos(p.theta));
             double laser_y = p.y + (laser_offset_x_ * sin(p.theta));
             double laser_theta = p.theta + laser_offset_yaw_;
@@ -295,9 +339,9 @@ private:
             grid_mapper_->updateMap(
                 p.map, 
                 filtered_ranges, 
-                laser_x,        // <-- ADICIONADO: Passa o X do Lidar
-                laser_y,        // <-- ADICIONADO: Passa o Y do Lidar
-                laser_theta,    // <-- ADICIONADO: Passa o Ângulo do Lidar
+                laser_x,        // <-- ADDED: Passes Lidar X
+                laser_y,        // <-- ADDED: Passes Lidar Y
+                laser_theta,    // <-- ADDED: Passes Lidar Angle
                 current_angle_min,  
                 current_increment   
             );
@@ -308,6 +352,12 @@ private:
         publishResults(msg->header.stamp);                          // Getting the best particle and publishing its information
     }
 
+    // =============================================================================
+    // WEIGHT NORMALIZATION
+    // Ensures that the sum of all particle weights equals 1.0, treating the cloud
+    // as a valid probabilistic distribution before the resampling mechanism is triggered.
+    // [See Section 2.4.1: Particle Filters (Monte Carlo Localization - MCL)]
+    // =============================================================================
     void normalizeWeights(double total_weight) {   // Normaization of weights ( all the weights together need to sum up to 1)
         if (total_weight > 0.0) {
             for (auto& p : particles_) {
@@ -319,6 +369,12 @@ private:
         }
     }
 
+    // =============================================================================
+    // RESAMPLE PARTICLES
+    // Selects the fittest particles via adaptive resampling based on their likelihood 
+    // weights. High-probability particles are duplicated; low-probability ones vanish.
+    // [See Section 2.4.1: Step 3: Resampling (Survival of the Fittest)]
+    // =============================================================================
     void resampleParticles() {                      // Resample particles based on their weight 
         std::vector<Particle> new_particles;        // Create new particle vector
         new_particles.reserve(particle_count_);     // Set the size of the vector 
@@ -344,6 +400,13 @@ private:
         particles_ = new_particles;                                             // Get new particles to the original vector
     }
 
+    // =============================================================================
+    // PUBLISH RESULTS AND SPATIAL TRANSFORMS
+    // Isolates the particle with the highest weight (best guess), extracts its generated
+    // occupancy grid to be rendered in RViz2, and computes the dynamic map-to-odom TF2 
+    // correction branch to offset odometry drift.
+    // [See Section 3.1.2: Transformation System (TF2)]
+    // =============================================================================
     void publishResults(rclcpp::Time current_time) {
         const auto& best_p = particles_[0];         
 
@@ -353,12 +416,12 @@ private:
         if (publish_counter >= 10) { 
             
             auto map_msg = best_p.map;                  
-            map_msg.header.stamp = current_time;    // <--- AQUI (Relógio Sincronizado)     
+            map_msg.header.stamp = current_time;    // <--- HERE (Synchronized Clock)     
             map_msg.header.frame_id = "map";            
             map_pub_->publish(map_msg);                 
 
             geometry_msgs::msg::PoseArray poses_msg;    
-            poses_msg.header.stamp = current_time;  // <--- AQUI (Relógio Sincronizado)     
+            poses_msg.header.stamp = current_time;  // <--- HERE (Synchronized Clock)     
             poses_msg.header.frame_id = "map";          
             for(const auto& p : particles_) {           
                 geometry_msgs::msg::Pose pose;
@@ -375,7 +438,7 @@ private:
         }
 
         geometry_msgs::msg::TransformStamped tf_msg; 
-        tf_msg.header.stamp = current_time;         // <--- AQUI (Relógio Sincronizado)           
+        tf_msg.header.stamp = current_time;         // <--- HERE (Synchronized Clock)           
         tf_msg.header.frame_id = "map";              
         tf_msg.child_frame_id = "odom";              
         

@@ -1,3 +1,14 @@
+# =============================================================================
+# HARDWARE INTERFACE NODE (BASE CONTROLLER)
+# This script bridges the high-level ROS 2 ecosystem with the low-level physical 
+# hardware. It manages the serial communication with the Dynamixel XH430-W350-R 
+# servomotors, converts /cmd_vel twist messages into raw wheel velocities, and 
+# calculates the real-time odometry using the differential drive kinematic model 
+# to be published to the FastSLAM node.
+# [See Section 4.2.4: Hardware Interface ROS2 Nodes]
+# [See Section 2.1.1: Differential Drive Kinematics]
+# =============================================================================
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, TransformStamped
@@ -6,19 +17,26 @@ from tf2_ros import TransformBroadcaster
 from dynamixel_sdk import *
 import math
 
-# --- HARDWARE CONFIGURATIONS ---
+# =============================================================================
+# HARDWARE CONFIGURATIONS & KINEMATIC PARAMETERS
+# Specifies the serial communication parameters for the RS-485 bus and the 
+# physical dimensions of the DIY TurtleBot3 chassis. The wheel radius (R) is 
+# adjusted to account for the larger LEGO 44771 tires.
+# [See Section 4.1.1: Component List and Electronic Architecture]
+# [See Section 4.2.2: Microcontroller Firmware]
+# =============================================================================
 BAUDRATE = 57600
 PROTOCOL_VERSION = 2.0
 
 DXL_ID_L = 4
 DXL_ID_R = 3
 
-# Real measurements of your robot (adjust if necessary)
+# Real measurements of your robot (adjusted for LEGO tires)
 R = 0.0688 / 2   # Wheel radius (m)
 L = 0.176        # Distance between wheels (m)
 TICKS_PER_REV = 4096 # XH430 Resolution
 
-# Dynamixel Addresses
+# Dynamixel Control Table Addresses
 ADDR_TORQUE_ENABLE = 64
 ADDR_OPERATING_MODE = 11
 ADDR_GOAL_VELOCITY = 104
@@ -42,7 +60,7 @@ class BaseController(Node):
         # Handlers base
         self.ph = PacketHandler(PROTOCOL_VERSION)
         
-        # --- CONEXÃO DIRETA AOS MOTORES ---
+        # --- DIRECT MOTOR CONNECTION ---
         self.port = self.find_dynamixel_port()
 
         if self.port is None:
@@ -55,14 +73,14 @@ class BaseController(Node):
         self.timer = self.create_timer(0.2, self.update_odometry)
 
     def find_dynamixel_port(self):
-        """Conecta diretamente à porta fixada pela regra UDEV"""
+        """Connects directly to the fixed port defined by the UDEV rule"""
         port_name = '/dev/motores'
         self.get_logger().info(f"🔍 Conectando aos motores na porta fixa: {port_name}")
 
         test_port = PortHandler(port_name)
         
         if test_port.openPort() and test_port.setBaudRate(BAUDRATE):
-            # Tenta dar um "Ping" no motor Esquerdo (ID 4) para confirmar que estão vivos
+            # Attempts to "Ping" the Left motor (ID 4) to confirm communication
             _, comm_result, _ = self.ph.ping(test_port, DXL_ID_L)
             
             if comm_result == COMM_SUCCESS:
@@ -77,17 +95,24 @@ class BaseController(Node):
         return None
 
     def setup_motors(self):
-        # Usando a porta encontrada para inicializar os dois IDs
+        # Using the discovered port to initialize both motor IDs
         for dxl_id in [DXL_ID_L, DXL_ID_R]:
             self.ph.write1ByteTxRx(self.port, dxl_id, ADDR_TORQUE_ENABLE, 0)
             self.ph.write1ByteTxRx(self.port, dxl_id, ADDR_OPERATING_MODE, 1)
             self.ph.write1ByteTxRx(self.port, dxl_id, ADDR_TORQUE_ENABLE, 1)
 
+    # =============================================================================
+    # ODOMETRY CALCULATION LOOP (20Hz)
+    # Reads the magnetic encoders from both wheels, calculates the physical 
+    # displacement using the differential drive kinematic model, and broadcasts 
+    # the relative motion (control data u_t) via the /odom topic and TF2 tree.
+    # [See Section 2.1.1: Differential Drive Kinematics, Eq. 4 and 5]
+    # =============================================================================
     def update_odometry(self):
 
         self.port.clearPort()
         
-        # 1. Read encoders: Ambos lidos na porta descoberta
+        # 1. Read encoders: Both read from the discovered port
         p_l, comm_l, _ = self.ph.read4ByteTxRx(self.port, DXL_ID_L, ADDR_PRESENT_POSITION)
         p_r, comm_r, _ = self.ph.read4ByteTxRx(self.port, DXL_ID_R, ADDR_PRESENT_POSITION)
 
@@ -108,6 +133,7 @@ class BaseController(Node):
             d_r = -(p_r - self.last_r_ticks) / TICKS_PER_REV * (2 * math.pi * R)
 
             # 3. Differential Kinematics
+            # [See Section 2.1.1: Eqs. 4 and 5]
             dS = (d_r + d_l) / 2.0
             dTh = (d_r - d_l) / L
 
@@ -139,6 +165,12 @@ class BaseController(Node):
         self.last_r_ticks = p_r
         self.last_time = now
 
+    # =============================================================================
+    # VELOCITY COMMAND CALLBACK
+    # Subscribes to the /cmd_vel topic, translates the linear (v) and angular (w) 
+    # velocities into specific motor rotations (RPM), and writes them to the hardware.
+    # [See Section 4.2.4: Hardware Interface ROS2 Nodes]
+    # =============================================================================
     def cmd_vel_callback(self, msg):
         v, w = msg.linear.x, msg.angular.z
         v_l = (v - w * (L / 2.0)) / R
@@ -146,7 +178,7 @@ class BaseController(Node):
         u_l = int((v_l * 60 / (2 * math.pi)) / 0.229)
         u_r = -int((v_r * 60 / (2 * math.pi)) / 0.229)
         
-        # Enviando comandos
+        # Sending velocity commands to the hardware
         self.ph.write4ByteTxRx(self.port, DXL_ID_L, ADDR_GOAL_VELOCITY, u_l)
         self.ph.write4ByteTxRx(self.port, DXL_ID_R, ADDR_GOAL_VELOCITY, u_r)
 
@@ -160,7 +192,7 @@ def main():
         pass
     finally:
         if node.port is not None:
-            node.port.closePort() # Fecha a porta de forma segura
+            node.port.closePort() # Safely closes the communication port
         node.destroy_node()
         rclpy.shutdown()
 

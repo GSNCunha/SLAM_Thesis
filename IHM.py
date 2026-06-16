@@ -1,3 +1,13 @@
+# =============================================================================
+# HUMAN-MACHINE INTERFACE (HMI) CONTROL STATION
+# This script acts as the centralized control dashboard for the robotic system. 
+# It manages the execution of ROS 2 nodes across three operational modes: 
+# Physical Robot (via SSH/Docker), Gazebo Simulation (Local), and Recorded Data 
+# Playback (Rosbags). It also allows real-time tuning of the FastSLAM parameters.
+# [See Section 4.3.4: Human-Machine Interface (HMI)]
+# [See Section 4.3.3: Node Structure and Communication Flow]
+# =============================================================================
+
 import sys
 import os
 import subprocess
@@ -7,43 +17,50 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt5.QtGui import QFont, QCursor
 from PyQt5.QtCore import Qt
 
-# ==========================================
-# ⚙️ HMI AND ROS 2 ENVIRONMENT SETTINGS
-# ==========================================
+# =============================================================================
+# HMI AND ROS 2 ENVIRONMENT SETTINGS
+# =============================================================================
 PI_USER = "burguer"
 CONTAINER = "slam_container_thesis"
 
-# PATH SEPARATION
+# =============================================================================
+# PATH CONFIGURATIONS
+# =============================================================================
 DOCKER_WORKSPACE = "/root/SLAM_Thesis"         # Absolute path INSIDE Docker
 PI_HOST_WORKSPACE = "~/Desktop/SLAM_Thesis"    # Real path on the Raspberry Pi disk
 LOCAL_WORKSPACE = "~/Desktop/SLAM_Thesis"      # Path on your PC (Local Ubuntu)
 
-# Base command running remotely on the Raspberry Pi (NOW WITHOUT SUBSHELL!)
+# Base command running remotely on the Raspberry Pi (without subshell execution)
 DOCKER_BASE = f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && source /opt/ros/humble/setup.bash && cd {DOCKER_WORKSPACE} && if [ -f install/setup.bash ]; then source install/setup.bash; fi && export ROS_DOMAIN_ID=30 && "
 
 class IHMRobot(QWidget):
     def __init__(self):
         super().__init__()
         
-        # Internal dictionary to store the state of all parameters
+        # =============================================================================
+        # FASTSLAM ALGORITHM PARAMETERS
+        # Internal dictionary to store the state of all configurable parameters 
+        # exposed to the user.
+        # [See Section 4.3.4: Figure 22 - SLAM Params window]
+        # =============================================================================
         self.params = {
             # Static Parameters (Initialization)
-            "particle_count": 300,
-            "map_resolution": 0.05,
+            "particle_count": 1000,
+            "map_resolution": 0.02,
             "linear_update": 0.05,
-            "angular_update": 0.10,
-            "meas_z_hit": 0.95,
+            "angular_update": 0.260,
+            "meas_z_hit": 0.950,
             "meas_z_rand": 0.05,
-            "meas_sigma": 0.50,
+            "meas_sigma": 0.05,
             "laser_max_range": 3.50,
             
             # Dynamic Parameters (Real-Time)
             "beam_skip": 5,
             "kernel_size": 1,
-            "alpha1": 0.05,
-            "alpha2": 0.005,
-            "alpha3": 0.05,
-            "alpha4": 0.005
+            "alpha1": 0.5,
+            "alpha2": 0.5,
+            "alpha3": 0.5,
+            "alpha4": 0.5
         }
         
         self.initUI()
@@ -75,7 +92,7 @@ class IHMRobot(QWidget):
         lbl_title.setStyleSheet("color: #d2dae2;")
         layout.addWidget(lbl_title)
 
-        # Robot IP Field
+        # Robot IP Field (SSH Target)
         ip_layout = QHBoxLayout()
         lbl_ip = QLabel("IP Address:")
         lbl_ip.setFont(QFont("Arial", 10))
@@ -85,9 +102,12 @@ class IHMRobot(QWidget):
         ip_layout.addWidget(self.entry_ip)
         layout.addLayout(ip_layout)
 
-        # ==========================================
-        # 🌟 ADDITION: OPERATION MODE SELECTOR
-        # ==========================================
+        # =============================================================================
+        # OPERATION MODE SELECTOR
+        # Switches between the physical robot, the Gazebo simulation, and the 
+        # offline Rosbag player data sources.
+        # [See Section 4.3.3: Node Structure and Communication Flow]
+        # =============================================================================
         mode_layout = QHBoxLayout()
         lbl_mode = QLabel("🖥️ Environment:")
         lbl_mode.setFont(QFont("Arial", 10, QFont.Bold))
@@ -101,7 +121,6 @@ class IHMRobot(QWidget):
         mode_layout.addWidget(lbl_mode)
         mode_layout.addWidget(self.combo_mode, stretch=1)
         layout.addLayout(mode_layout)
-        # ==========================================
 
         # Universal function to create buttons with consistent design
         def create_btn(text, color, callback):
@@ -113,9 +132,9 @@ class IHMRobot(QWidget):
             btn.clicked.connect(callback)
             return btn
 
-        # ==========================================
-        # 🔧 SYSTEM OPERATIONS (DOCKER AND SENSORS)
-        # ==========================================
+        # =============================================================================
+        # SYSTEM OPERATIONS (DOCKER AND SENSORS)
+        # =============================================================================
         layout.addWidget(create_btn("0. Initialize System (Docker)", "#8e44ad", self.btn_start_docker))
         layout.addWidget(create_btn("🔄 Restart Docker (Reset)", "#34495e", self.btn_restart_docker))
         
@@ -136,9 +155,9 @@ class IHMRobot(QWidget):
         layout.addWidget(create_btn("1. Start Sensor (Lidar)", "#c0392b", self.btn_lidar))
         layout.addWidget(create_btn("2. Engage Traction (Motors)", "#d35400", self.btn_motores))
 
-        # ==========================================
-        # 🟢 STATIC PARAMETERS (PRE-BOOT)
-        # ==========================================
+        # =============================================================================
+        # STATIC PARAMETERS (PRE-BOOT)
+        # =============================================================================
         line1 = QFrame(); line1.setFrameShape(QFrame.HLine); line1.setStyleSheet("background-color: #485460; margin-top: 10px;")
         layout.addWidget(line1)
 
@@ -164,7 +183,7 @@ class IHMRobot(QWidget):
             init_val = self.params[param_name]
             val_str = f"{init_val:.3f}" if is_float else str(init_val)
             
-            # Change: Using QLineEdit instead of QLabel to allow typing
+            # Using QLineEdit instead of QLabel to allow direct manual typing
             entry_val = QLineEdit(val_str)
             entry_val.setFont(QFont("Courier", 11, QFont.Bold))
             entry_val.setAlignment(Qt.AlignCenter)
@@ -177,7 +196,7 @@ class IHMRobot(QWidget):
             
             # Function to validate and apply the new value
             def update_value(new_val):
-                # Restricts between minimum and maximum
+                # Restricts input strictly between defined minimum and maximum limits
                 new_val = max(min_val, min(new_val, max_val))
                 
                 if is_float:
@@ -189,25 +208,25 @@ class IHMRobot(QWidget):
                     
                 self.params[param_name] = new_val
                 
-                # If dynamic, sends the command to ROS 2
+                # If designated as dynamic, transmits the update command directly to ROS 2
                 if is_dynamic:
                     cmd = f"ros2 param set /fastslam_node {param_name} {new_val}"
                     self.run_remote_silent(cmd)
 
-            # Callback for +/- buttons
+            # Callback for +/- step buttons
             def on_click(delta):
                 current = self.params[param_name]
                 update_value(current + delta)
 
-            # Callback for when the user types in the field and presses Enter (or clicks outside)
+            # Callback for manual text entry completion (Enter key or focus loss)
             def on_text_edit():
                 try:
-                    # Replaces comma with period to avoid errors in decimal values
+                    # Replaces comma with period to avoid parsing errors in decimal values
                     text_val = entry_val.text().replace(',', '.')
                     new_val = float(text_val) if is_float else int(float(text_val))
                     update_value(new_val)
                 except ValueError:
-                    # If invalid text is typed (e.g., letters), reverts to the current value
+                    # If invalid text is typed (e.g., characters), reverts to the previous valid state
                     current = self.params[param_name]
                     if is_float:
                         entry_val.setText(f"{current:.3f}")
@@ -221,7 +240,7 @@ class IHMRobot(QWidget):
             h_layout.addWidget(lbl_title)
             h_layout.addStretch()
             h_layout.addWidget(btn_minus)
-            h_layout.addWidget(entry_val) # Now adds the text field
+            h_layout.addWidget(entry_val) # Adds the interactive text field
             h_layout.addWidget(btn_plus)
             layout.addWidget(frame)
 
@@ -244,9 +263,9 @@ class IHMRobot(QWidget):
         slam_layout.addWidget(create_btn("3b. SLAM (Local PC)", "#f1c40f", self.btn_slam_local))
         layout.addLayout(slam_layout)
 
-        # ==========================================
-        # 🎛️ DYNAMIC PARAMETERS (LIVE TUNING)
-        # ==========================================
+        # =============================================================================
+        # DYNAMIC PARAMETERS (LIVE TUNING)
+        # =============================================================================
         line2 = QFrame(); line2.setFrameShape(QFrame.HLine); line2.setStyleSheet("background-color: #485460; margin-top: 10px;")
         layout.addWidget(line2)
 
@@ -265,13 +284,13 @@ class IHMRobot(QWidget):
         create_stepper("Alpha 3 (Straight-Straight)", "alpha3", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
         create_stepper("Alpha 4 (Straight-Turn)", "alpha4", 0.0, 0.5, 0.005, is_float=True, is_dynamic=True)
 
-        # ==========================================
-        # 🚀 FINAL OPERATIONS AND VISUALIZATION
-        # ==========================================
+        # =============================================================================
+        # FINAL OPERATIONS AND VISUALIZATION
+        # =============================================================================
         line3 = QFrame(); line3.setFrameShape(QFrame.HLine); line3.setStyleSheet("background-color: #485460; margin-top: 10px;")
         layout.addWidget(line3)
 
-        # --- 🌟 NEW: TEXT BOX FOR ROSBAG NAME ---
+        # --- TEXT BOX FOR ROSBAG NAME ---
         bag_name_layout = QHBoxLayout()
         lbl_bag_name = QLabel("Rosbag Name:")
         lbl_bag_name.setFont(QFont("Arial", 10, QFont.Bold))
@@ -282,14 +301,14 @@ class IHMRobot(QWidget):
         bag_name_layout.addWidget(self.entry_bag_name)
         layout.addLayout(bag_name_layout)
 
-        # --- ROSBAG DIVISION (HORIZONTAL LAYOUT) ---
+        # --- ROSBAG RECORDING DIVISION (HORIZONTAL LAYOUT) ---
         rosbag_layout = QHBoxLayout()
         rosbag_layout.setSpacing(10)
         rosbag_layout.addWidget(create_btn("⏺️ Record Data (Pi)", "#16a085", self.btn_rosbag_remote))
         rosbag_layout.addWidget(create_btn("⏺️ Record Data (PC)", "#1abc9c", self.btn_rosbag_local))
         layout.addLayout(rosbag_layout)
         
-        # --- 🌟 NEW: BUTTON TO SYNC ROSBAGS (REMOTE -> LOCAL) ---
+        # --- BUTTON TO SYNC ROSBAGS (REMOTE -> LOCAL) ---
         layout.addWidget(create_btn("🔄 Sync Rosbags (Pi ➔ PC)", "#2980b9", self.btn_sync_bags))
         
         # --- ROSBAG PLAYER (PLAY) ---
@@ -325,9 +344,11 @@ class IHMRobot(QWidget):
         main_layout.addWidget(scroll_area)
 
 
-    # ==========================================
-    # 📡 COMMUNICATION PROTOCOLS (SSH / DOCKER / LOCAL)
-    # ==========================================
+    # =============================================================================
+    # COMMUNICATION PROTOCOLS (SSH / DOCKER / LOCAL)
+    # Functions responsible for securely tunneling execution commands to the 
+    # remote hardware or spawning local processes.
+    # =============================================================================
     def run_remote(self, command_suffix, title="Remote Terminal"):
         current_ip = self.entry_ip.text().strip()
         if not current_ip: return
@@ -347,9 +368,10 @@ class IHMRobot(QWidget):
         terminal_cmd = f"gnome-terminal --title=\"{title}\" -- bash -c \"{command}; exec bash\""
         subprocess.Popen(terminal_cmd, shell=True)
 
-    # ==========================================
-    # 🎛️ OPERATION ROUTINES (CALLBACKS)
-    # ==========================================
+    # =============================================================================
+    # OPERATION ROUTINES (CALLBACKS)
+    # Implementation of individual button behaviors triggering the ROS 2 ecosystem.
+    # =============================================================================
     def btn_start_docker(self):
         self.run_local(f"ssh -t {PI_USER}@{self.entry_ip.text()} 'docker start {CONTAINER}'", "Initializing Docker")
 
@@ -358,17 +380,17 @@ class IHMRobot(QWidget):
 
     # --- CLEAN AND COMPILATION CALLBACKS (CLEAN & BUILD) ---
     def btn_clean_remote(self):
-        # THE MAGIC HERE: We removed the single quotes from the echo to avoid breaking gnome-terminal
+        # Removes the single quotes from the echo to prevent gnome-terminal breakage
         cmd = "rm -rf build/ install/ log/ && echo Remote Build Cleaned Successfully"
         self.run_remote(cmd, "Cleaning Build (Pi)")
         
     def btn_clean_local(self):
-        # Uses sudo to ensure local removal of Docker files. Will prompt for a password in the Ubuntu terminal.
+        # Employs sudo privileges to ensure complete local removal of Docker-generated files.
         cmd = f"cd {LOCAL_WORKSPACE} && sudo rm -rf build/ install/ log/ && echo 'Local Build Cleaned!'"
         self.run_local(cmd, "Cleaning Build (Local PC)")
 
     def btn_build_remote(self):
-        # Compiles EVERYTHING in the src folder, one package at a time to save RAM
+        # Sequentially compiles packages within the src directory to prevent RAM saturation on the Pi
         build_cmd = (
             "colcon build --symlink-install --executor sequential && "
             "source install/setup.bash"
@@ -376,7 +398,7 @@ class IHMRobot(QWidget):
         self.run_remote(build_cmd, "Remote Compiler (Pi)")
 
     def btn_build_local(self):
-        # Compiles EVERYTHING on Local PC
+        # Standard unconstrained parallel compilation for the local workstation
         cmd = (
             f"source /opt/ros/humble/setup.bash && "
             f"cd {LOCAL_WORKSPACE} && "
@@ -386,19 +408,20 @@ class IHMRobot(QWidget):
         self.run_local(cmd, "Local Compiler (Ubuntu PC)")
 
     def btn_lidar(self):
-        # Port and permissions are now handled automatically by Linux/UDEV
+        # Port assignment and hardware permissions are autonomously resolved by UDEV rules
         self.run_remote("ros2 launch ldlidar_stl_ros2 ld19.launch.py", "Lidar Sensor")
 
     def btn_motores(self):
-        # The base_controller now points directly to /dev/motores
+        # The base controller script interfaces directly with /dev/motores symlink
         self.run_remote("python3 src/utils/scripts/base_controller.py", "Traction and Odometry")
 
-    # --- AUXILIARY FUNCTION FOR SLAM PARAMETERS ---
-    # ==========================================
-    # 🌟 ADDITION: MODE CAPTURE LOGIC
-    # ==========================================
+    # =============================================================================
+    # MODE CAPTURE LOGIC (SLAM PARAMETERS COMPILATION)
+    # Extracts the GUI parameter values and dynamically formats them as launch 
+    # arguments for the primary FastSLAM node.
+    # =============================================================================
     def _get_slam_args(self):
-        # Reads the combo box and defines the string that ROS 2 understands
+        # Parses the environment combo box to define the operational mode
         mode_text = self.combo_mode.currentText()
         if "Gazebo" in mode_text:
             r_mode = "gazebo"
@@ -408,7 +431,7 @@ class IHMRobot(QWidget):
             r_mode = "real"
 
         return (
-            f"robot_mode:={r_mode} "  # <-- Sending the choice to the Launch Brain
+            f"robot_mode:={r_mode} "  # <-- Forwards the selected execution mode
             f"particle_count:={int(self.params['particle_count'])} "
             f"map_resolution:={self.params['map_resolution']} "
             f"linear_update:={self.params['linear_update']} "
@@ -419,7 +442,7 @@ class IHMRobot(QWidget):
             f"laser_max_range:={self.params['laser_max_range']}"
         )
 
-    # --- SLAM CALLBACKS ---
+    # --- SLAM EXECUTION CALLBACKS ---
     def btn_slam_remote(self):
         cmd = f"ros2 launch fastslam_thesis fastslam.launch.py {self._get_slam_args()}"
         self.run_remote(cmd, "SLAM Mapping (Pi)")
@@ -435,11 +458,11 @@ class IHMRobot(QWidget):
         )
         self.run_local(cmd, "SLAM Mapping (Local PC)")
 
-    # --- UPDATED ROSBAG CALLBACKS WITH DYNAMIC NAME AND CORRECT FOLDER ---
+    # --- ROSBAG RECORDING CALLBACKS (DATA ACQUISITION) ---
     def btn_rosbag_remote(self):
         name = self.entry_bag_name.text().strip()
         if not name: name = "rosbag_pi"
-        # Ensures the ROSBAG folder is created and saves the file inside it
+        # Verifies directory existence and records targeted topics into the specified folder
         cmd = f"mkdir -p ROSBAG && ros2 bag record -o ROSBAG/{name} /scan /tf /tf_static /odom"
         self.run_remote(cmd, f"Rosbag Recorder (Pi): {name}")
 
@@ -457,27 +480,27 @@ class IHMRobot(QWidget):
         )
         self.run_local(cmd, f"Rosbag Recorder (Local PC): {name}")
 
-    # --- 🌟 NEW CALLBACK: SYNC VIA RSYNC (SKIPS DUPLICATES) ---
+    # --- SYNC VIA RSYNC (SKIPS DUPLICATES OPTIMIZATION) ---
     def btn_sync_bags(self):
         current_ip = self.entry_ip.text().strip()
         if not current_ip: return
-        # Ensures the local folder exists and executes rsync bringing only new files efficiently
+        # Ensures local directory availability and pulls strictly missing/new data via rsync
         cmd = (
             f"mkdir -p {LOCAL_WORKSPACE}/ROSBAG && "
             f"rsync -avz --progress {PI_USER}@{current_ip}:{PI_HOST_WORKSPACE}/ROSBAG/ {LOCAL_WORKSPACE}/ROSBAG/"
         )
         self.run_local(cmd, "Syncing Rosbags Database (Pi ➔ Local PC)")
 
-    # --- ROSBAG PLAYER CALLBACKS ---
+    # --- ROSBAG PLAYER CALLBACKS (DATA REPLAY) ---
     def update_bag_list(self):
         self.combo_bags.clear()
-        # The path uses LOCAL_WORKSPACE defined at the beginning of the file
+        # Evaluates the localized workspace path established globally
         bag_dir = os.path.expanduser(f"{LOCAL_WORKSPACE.replace('~', '~')}/ROSBAG")
         
         if os.path.exists(bag_dir):
-            # In ROS 2, bags are folders containing .db3 files
+            # In ROS 2 architecture, bags are container folders housing the underlying .db3 databases
             bags = [f for f in os.listdir(bag_dir) if os.path.isdir(os.path.join(bag_dir, f))]
-            bags.sort(reverse=True) # Displays the most recent recordings first
+            bags.sort(reverse=True) # Displays chronological acquisitions descending
             if bags:
                 self.combo_bags.addItems(bags)
             else:
@@ -496,17 +519,15 @@ class IHMRobot(QWidget):
             f"cd {LOCAL_WORKSPACE} && "
             f"source install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"ros2 bag play ROSBAG/{selected_bag} --clock" # <-- CHANGED TO INCLUDE --clock
+            f"ros2 bag play ROSBAG/{selected_bag} --clock" # Ensures simulated clock broadcast
         )
         self.run_local(cmd, f"Rosbag Player: {selected_bag}")
 
-    # --- AUTONOMOUS ROUTE CALLBACKS ---
+    # --- AUTONOMOUS ROUTE EXECUTION CALLBACKS ---
     def btn_nav_remote(self):
-        # Updated: Points to the utils folder
         self.run_remote("python3 src/utils/scripts/simple_path.py", "Autonomous Navigation (Pi)")
 
     def btn_nav_local(self):
-        # Updated: Points to the utils folder
         cmd = (
             f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
             f"source /opt/ros/humble/setup.bash && "
@@ -519,7 +540,7 @@ class IHMRobot(QWidget):
 
     # --- GRAPHICAL VISUALIZATION CALLBACKS ---
     def btn_gazebo(self):
-        # THE MAGIC IS HERE: "./src/utils/..." forces ROS 2 to read it as a file and not as a package!
+        # Bypass package recognition by directly executing the explicit file path
         cmd = (
             f"export TURTLEBOT3_MODEL=burger && "
             f"export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && "
@@ -537,7 +558,7 @@ class IHMRobot(QWidget):
             f"source /opt/ros/humble/setup.bash && "
             f"source {LOCAL_WORKSPACE}/install/setup.bash && "
             f"export ROS_DOMAIN_ID=30 && "
-            f"ros2 run rviz2 rviz2 --ros-args -p use_sim_time:=True" # <-- CHANGED TO INCLUDE use_sim_time
+            f"ros2 run rviz2 rviz2 --ros-args -p use_sim_time:=True" # Forces synchronization with /clock
         )
         self.run_local(cmd, "3D Viewer")
 

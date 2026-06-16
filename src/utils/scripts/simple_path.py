@@ -1,3 +1,13 @@
+# =============================================================================
+# KINEMATIC PATH PLANNING NODE
+# This script implements the autonomous navigation state-machine. It executes 
+# a predefined sequence of geometric primitives (straight lines and arcs) to 
+# ensure comprehensive LiDAR coverage of the experimental arena without relying 
+# on harsh in-place rotations.
+# [See Section 4.3.2: Complementary Nodes]
+# [See Section 4.4.2: Kinematic Path Planning and Trajectory Execution]
+# =============================================================================
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
@@ -8,16 +18,20 @@ class SequenceNavNode(Node):
     def __init__(self):
         super().__init__('sequence_nav_node')
         
-        # --- GENERAL SETTINGS ---
+        # =============================================================================
+        # GENERAL SETTINGS & ROS 2 SETUP
+        # Configures the base linear speed and turn tolerances, alongside the 
+        # publishers (/cmd_vel) and subscribers (/odom) necessary for closed-loop 
+        # relative navigation.
+        # =============================================================================
         self.linear_speed = 0.05  # Base linear speed in m/s
         self.turn_tolerance = 0.04 # Tolerance for 90-degree turn completion
         
-        # --- ROS SETUP ---
         self.publisher_ = self.create_publisher(Twist, '/cmd_vel', 10)
         self.subscription = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.timer = self.create_timer(0.05, self.control_loop)
 
-        # --- STATE VARIABLES ---
+        # State Variables
         self.state = 'FETCH_CMD' 
         self.current_x = 0.0
         self.current_y = 0.0
@@ -28,19 +42,20 @@ class SequenceNavNode(Node):
         self.start_y = 0.0
         self.start_theta = 0.0
         
-        # --- SEQUENCE EXECUTION VARIABLES ---
+        # Sequence Execution Variables
         self.command_sequence = []
         self.current_cmd_idx = 0
         self.current_target_val = 0.0  # Stores either distance (m) or radius (m)
 
-        # --- DEBUG VARIABLES ---
-        self.print_counter = 0 # Usado para não floodar o terminal
+        # Debug Variables
+        self.print_counter = 0 # Used to prevent terminal flooding
         self.get_logger().info("🚀 Nó de Navegação Iniciado! Aguardando o sensor de odometria...")
 
-        # =====================================================================
-        # DEFINE YOUR SEQUENCE HERE
-        # =====================================================================
-        
+        # =============================================================================
+        # PREDEFINED NAVIGATION TRAJECTORY
+        # Defines the specific path to navigate the experimental arena.
+        # [See Section 4.4.2: Figure 16 - Predefined autonomous navigation trajectory]
+        # =============================================================================
         self.add_straight(200)       
         self.add_right(0.25)          
         self.add_right(0.25) 
@@ -48,10 +63,11 @@ class SequenceNavNode(Node):
         self.add_left(0.25)  
         self.add_straight(500) 
         self.add_left(0.25) 
-        
-        # =====================================================================
 
-    # --- COMMAND BUILDER FUNCTIONS ---
+    # =============================================================================
+    # COMMAND BUILDER FUNCTIONS
+    # Populates the trajectory queue.
+    # =============================================================================
     def add_straight(self, distance_mm):
         # Converts mm to meters internally
         distance_m = distance_mm / 1000.0
@@ -63,7 +79,11 @@ class SequenceNavNode(Node):
     def add_right(self, radius_m):
         self.command_sequence.append({'type': 'TURN_RIGHT', 'value': radius_m})
 
-    # --- SENSOR CALLBACK ---
+    # =============================================================================
+    # ODOMETRY SENSOR CALLBACK
+    # Updates the internal spatial state of the robot required to evaluate 
+    # the completion of the current geometric maneuver.
+    # =============================================================================
     def odom_callback(self, msg):
         pos = msg.pose.pose.position
         ori = msg.pose.pose.orientation
@@ -75,21 +95,27 @@ class SequenceNavNode(Node):
         cosy_cosp = 1 - 2 * (ori.y * ori.y + ori.z * ori.z)
         self.current_theta = math.atan2(siny_cosp, cosy_cosp)
         
-        # DEBUG: Avisa apenas na primeira vez que recebe os dados
+        # DEBUG: Notify only the first time data is received
         if not self.received_odom:
             self.get_logger().info("✅ ODOMETRIA RECEBIDA! O robô agora sabe onde está. Iniciando a sequência.")
             
         self.received_odom = True
 
     def normalize_angle(self, angle):
-        """ Keeps the angle between -pi and pi """
+        """ Keeps the angle strictly between -PI and PI """
         while angle > math.pi: angle -= 2.0 * math.pi
         while angle < -math.pi: angle += 2.0 * math.pi
         return angle
 
-    # --- MAIN CONTROL LOOP ---
+    # =============================================================================
+    # MAIN CONTROL LOOP (STATE MACHINE)
+    # Iterates at 20Hz, evaluating the current odometry against the active 
+    # command target. Calculates the necessary linear and angular velocities 
+    # to fulfill the maneuver.
+    # [See Section 4.3.2: Complementary Nodes]
+    # =============================================================================
     def control_loop(self):
-        # DEBUG: Verifica se a odometria está chegando
+        # DEBUG: Check if odometry is arriving
         if not self.received_odom:
             if not hasattr(self, 'odom_wait_printed'):
                 self.get_logger().warning("⚠️ TRAVADO: Aguardando dados em '/odom'. Verifique se o base_controller.py está rodando!")
@@ -98,7 +124,7 @@ class SequenceNavNode(Node):
 
         msg = Twist()
         
-        # Filtro de print (imprime a cada 10 ciclos = 0.5 segundos)
+        # Print filter (prints every 10 cycles = 0.5 seconds)
         self.print_counter += 1
         should_print = (self.print_counter % 10 == 0)
 
